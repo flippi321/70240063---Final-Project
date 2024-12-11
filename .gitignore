@@ -1,3 +1,7 @@
 db-generation.zip
 data
+
+# Output files 
 articles
+article.dat
+user.dat
