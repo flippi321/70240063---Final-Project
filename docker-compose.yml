@@ -1,4 +1,4 @@
-version: '3.8'
+version: '4.3'
 services:
   DBMS1:
     image: mongo:latest
@@ -21,7 +21,7 @@ services:
       - mongo-net
 
   hadoop:
-    image: sequenceiq/hadoop-docker:latest
+    image: bde2020/hadoop-base:latest
     container_name: hadoop
     ports:
       - "50070:50070"
