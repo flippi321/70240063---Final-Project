@@ -3,5 +3,4 @@ data
 
 # Output files 
 articles
-article.dat
-user.dat
+dat_files
