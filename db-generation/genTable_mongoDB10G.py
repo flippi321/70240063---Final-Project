@@ -63,7 +63,7 @@ def gen_an_article (i):
 
     # create text
     article["text"] = "text_a"+str(i)+'.txt'
-    path = f'./articles/article'+str(i)
+    path = f'{data_output_dir}/article'+str(i)
     if not os.path.exists(path):
         os.makedirs(path) 
 
