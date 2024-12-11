@@ -12,9 +12,9 @@ READS_NUM = 1000000
 uid_region = {}
 aid_lang = {}
 
-input_dir = 'data'
-data_output_dir = 'articles'
-dat_files_output_dir = 'dat_files'
+input_dir = 'data/raw'
+data_output_dir = 'data/database/articles'
+dat_files_output_dir = 'data/database/dat_files'
 
 # Beijing:60%   Hong Kong:40%
 # en:20%    zh:80%
