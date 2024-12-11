@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  DBMS1:
+    image: mongo:latest
+    container_name: DBMS1
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./init-scripts/mongo-init1.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - mongo-net
+
+  DBMS2:
+    image: mongo:latest
+    container_name: DBMS2
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./init-scripts/mongo-init2.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - mongo-net
+
+  hadoop:
+    image: sequenceiq/hadoop-docker:latest
+    container_name: hadoop
+    ports:
+      - "50070:50070"
+      - "9000:9000"
+    volumes:
+      - ./hadoop:/etc/hadoop:ro
+    networks:
+      - hadoop-net
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - mongo-net
+
+networks:
+  mongo-net:
+  hadoop-net:
