@@ -85,7 +85,7 @@ def generate_data(
         article["text"] = "text_a"+str(i)+'.txt'
         path = f'{data_output_dir}/article'+str(i)
         if not os.path.exists(path):
-            os.makedirs(path) 
+            os.makedirs(path, exist_ok=True) 
 
         categories = ['business', 'entertainment', 'sport', 'tech']
         random_category = categories[random.randint(0,3)]
@@ -152,10 +152,10 @@ def generate_data(
         return read
 
     if not os.path.exists(f'/{data_output_dir}'):
-        os.makedirs(f'./{data_output_dir}')
+        os.makedirs(f'./{data_output_dir}', exist_ok=True)
 
     if not os.path.exists(f'/{dat_files_output_dir}'):
-        os.makedirs(f'./{dat_files_output_dir}')
+        os.makedirs(f'./{dat_files_output_dir}', exist_ok=True)
 
     with open(f"{dat_files_output_dir}/user.dat", "w+") as f:
         for i in range (USERS_NUM):
