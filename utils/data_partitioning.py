@@ -97,17 +97,3 @@ def partition_all(input_dir="data/database/dat_files", output_dir="data/database
 
     # If any of the partitioning fails, return False
     return user and article and read
-
-# TODO REMOVE
-"""
-Now we can run
-
-mongoimport --host localhost --port 27017 --db db_beijing --collection User --file data/database/partitioned/user_beijing.json --jsonArray
-mongoimport --host localhost --port 27017 --db db_beijing --collection Article --file data/database/partitioned/article_science.json --jsonArray
-mongoimport --host localhost --port 27017 --db db_beijing --collection Read --file data/database/partitioned/read_beijing.json --jsonArray
-
-mongoimport --host localhost --port 27018 --db db_hongkong --collection User --file data/database/partitioned/user_hongkong.json --jsonArray
-mongoimport --host localhost --port 27018 --db db_hongkong --collection Article --file data/database/partitioned/article_technology.json --jsonArray
-mongoimport --host localhost --port 27018 --db db_hongkong --collection Read --file data/database/partitioned/read_hongkong.json --jsonArray
-
-"""
