@@ -4,6 +4,12 @@ import json
 # Partition user files
 #   Users are split between Beijing and Hong Kong
 def partition_user(input_dir, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    if not (
+        os.path.exists(f"{input_dir}/user.dat")):
+        print("User file not found")
+        return False
+    
     with open(f"{input_dir}/user.dat", "r") as infile:
         beijing_users = []
         hongkong_users = []
@@ -24,6 +30,12 @@ def partition_user(input_dir, output_dir):
 # Partition article files
 #   Articles are split between Science and Technology
 def partition_article(input_dir, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    if not (
+        os.path.exists(f"{input_dir}/article.dat")):
+        print("Article file not found")
+        return False
+
     with open(f"{input_dir}/article.dat", "r") as infile:
         science_articles = []
         technology_articles = []
@@ -44,6 +56,13 @@ def partition_article(input_dir, output_dir):
 # Partition the read files
 #   This is split between Beijing and Hong Kong (depending on which user who read the article)
 def partition_read(input_dir, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    if not (
+        os.path.exists(f"{output_dir}/user_beijing.json") and
+        os.path.exists(f"{output_dir}/user_hongkong.json")):
+        print("Partitioned user files not found")
+        return False
+
     # Load users to match region
     with open(f"{output_dir}/user_beijing.json", "r") as infile_bj, \
          open(f"{output_dir}/user_hongkong.json", "r") as infile_hk:
@@ -67,7 +86,7 @@ def partition_read(input_dir, output_dir):
 
     return True
 
-def partition_all(input_dir, output_dir):
+def partition_all(input_dir="data/database/dat_files", output_dir="data/database/partitioned"):
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
@@ -78,7 +97,6 @@ def partition_all(input_dir, output_dir):
 
     # If any of the partitioning fails, return False
     return user and article and read
-partition_all(input_dir="data/database/dat_files", output_dir="data/database/partitioned")
 
 # TODO REMOVE
 """
