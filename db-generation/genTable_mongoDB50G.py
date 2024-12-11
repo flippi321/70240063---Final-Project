@@ -12,6 +12,9 @@ READS_NUM = 1000000
 uid_region = {}
 aid_lang = {}
 
+input_dir = 'db-generation'
+data_output_dir = 'articles'
+dat_files_output_dir = 'dat_files'
 
 # Beijing:60%   Hong Kong:40%
 # en:20%    zh:80%
@@ -60,17 +63,17 @@ def gen_an_article (i):
 
     # create text
     article["text"] = "text_a"+str(i)+'.txt'
-    path = './articles/article'+str(i)
+    path = f'./{data_output_dir}/article'+str(i)
     if not os.path.exists(path):
         os.makedirs(path) 
 
     categories = ['business', 'entertainment', 'sport', 'tech']
     random_category = categories[random.randint(0,3)]
-    files = os.listdir('./bbc_news_texts/' + random_category +'/')
+    files = os.listdir(f'{input_dir}/bbc_news_texts/' + random_category +'/')
     size = len(files)
     random_news = files[random.randint(0,size-1)]
-    copyfile('bbc_news_texts/' + random_category +'/' +random_news, path+"/text_a"+str(i)+'.txt')
-
+    copyfile(f'{input_dir}/bbc_news_texts/' + random_category +'/' +random_news, path+"/text_a"+str(i)+'.txt')
+ 
 
 
     # create images
@@ -81,16 +84,16 @@ def gen_an_article (i):
     article["image"] = image_str
  
     for j in range(image_num):
-        copyfile('./image/' + str(random.randint(0,599))+'.jpg',path+'/image_a'+str(i)+'_'+str(j)+'.jpg')
+        copyfile(f'{input_dir}/image/' + str(random.randint(0,599))+'.jpg',path+'/image_a'+str(i)+'_'+str(j)+'.jpg')
 
     # create video
     if random.random() < 0.4:
-        #has one video
+        # has one video
         article["video"] = "video_a"+str(i)+'_video.flv'
         if random.random()<0.5:
-            copyfile('./video/video1.flv',path+"/video_a"+str(i)+'_video.flv')
+            copyfile(f'{input_dir}/video/video1.flv',path+"/video_a"+str(i)+'_video.flv')
         else:
-            copyfile('./video/video2.flv',path+"/video_a"+str(i)+'_video.flv')
+            copyfile(f'{input_dir}/video/video2.flv',path+"/video_a"+str(i)+'_video.flv')
     else:
         article["video"] = ""
 
@@ -129,21 +132,22 @@ def gen_an_read (i):
         read["commentDetail"] = "comments to this article: (" + read["uid"] + "," + read["aid"] + ")" 
     return read
 
-with open("user.dat", "w+") as f:
-    for i in range (USERS_NUM):
+if not os.path.exists(f'./{data_output_dir}'):
+    os.makedirs(f'./{data_output_dir}')
+if not os.path.exists(f'./{dat_files_output_dir}'):
+    os.makedirs(f'./{dat_files_output_dir}')
+
+with open(f"{dat_files_output_dir}/user.dat", "w+") as f:
+    for i in range(USERS_NUM):
         json.dump(gen_an_user(i), f)
         f.write("\n")
 
-if not os.path.exists('./articles'):
-    os.makedirs('./articles')
-with open("article.dat", "w+") as f:
+with open(f"{dat_files_output_dir}/article.dat", "w+") as f:
     for i in range(ARTICLES_NUM):
         json.dump(gen_an_article(i), f)
         f.write("\n")
 
-
-with open("read.dat", "w+") as f:
+with open(f"{dat_files_output_dir}/read.dat", "w+") as f:
     for i in range(READS_NUM):
         json.dump(gen_an_read(i), f)
         f.write("\n")
-
