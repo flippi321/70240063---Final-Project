@@ -104,4 +104,10 @@ def setup_databases(should_compose=True, input_dir='data/raw', data_output_dir='
     else:
         uploaded = False
     
-    print("")
+    success = composed and generated and partitioned and uploaded
+    if(success):
+        print("Database setup completed successfully.")
+    else:
+        print("Database setup failed.")
+    
+    return success
