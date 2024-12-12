@@ -2,10 +2,12 @@ import os
 import subprocess
 from utils.data_generation import generate_data
 from utils.data_partitioning import partition_all
+from pymongo import MongoClient
+import json
 
-should_compose = False
-should_generate = False
-should_partition = False
+should_compose = True
+should_generate = True
+should_partition = True
 
 if(should_compose):
     # Compose the docker containers
@@ -39,15 +41,44 @@ if should_partition:
 else:
     partitioned = True
 
-# Run mongoimport commands after partitioning the data
+# Use pymongo to import data into MongoDB after partitioning
 if partitioned:
-    print("Importing data into MongoDB...")
-    uploaded_data = True
+    try:
+        print("Importing data into MongoDB...")
+
+        # Connect to MongoDB for both databases (DBMS1 and DBMS2)
+        client1 = MongoClient("localhost", 27017)  # DBMS1 (Beijing)
+        client2 = MongoClient("localhost", 27018)  # DBMS2 (Hong Kong)
+        
+        dbms1_db = client1["DBMS1"]  # Beijing database
+        dbms2_db = client2["DBMS2"]  # Hong Kong database
+
+        # Function to insert data into MongoDB collections
+        def insert_data(collection_name, file_path, db):
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                db[collection_name].insert_many(data)
+                print(f"Data inserted into {db.name} - {collection_name} collection")
+
+        # Insert data into DBMS1 (Beijing database)
+        insert_data("User", "data/database/partitioned/user_beijing.json", dbms1_db)
+        insert_data("Article", "data/database/partitioned/article_science.json", dbms1_db)
+        insert_data("Read", "data/database/partitioned/read_beijing.json", dbms1_db)
+
+        # Insert data into DBMS2 (Hong Kong database)
+        insert_data("User", "data/database/partitioned/user_hongkong.json", dbms2_db)
+        insert_data("Article", "data/database/partitioned/article_technology.json", dbms2_db)
+        insert_data("Read", "data/database/partitioned/read_hongkong.json", dbms2_db)
+
+        print("Data import into MongoDB completed successfully.")
+
+    except Exception as e:
+        print(f"Error during data import: {e}")
 else:
     print("Data partitioning failed")
 
 
-if (generated and partitioned and uploaded_data):
+if (generated and partitioned):
     print("Data generation and partitioning completed successfully")
 else:
     print("Data generation failed" if not generated else "Data partitioning failed")
