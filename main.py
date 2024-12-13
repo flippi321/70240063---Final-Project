@@ -2,12 +2,18 @@ import os
 import subprocess
 from utils.data_generation import generate_data
 from utils.data_partitioning import partition_all
-from pymongo import MongoClient
+from utils.hdfs_helper import process_and_upload_articles, get_hdfs_partition_path, add_hdfs_paths_to_articles
+try:
+    from pymongo import MongoClient
+except:
+    subprocess.run("pip3 install pymongo")
+    from pymongo import MongoClient
 import json
 
 should_compose = True
 should_generate = True
 should_partition = True
+should_upload_to_hdfs = True
 
 if(should_compose):
     # Compose the docker containers
@@ -40,6 +46,14 @@ if should_partition:
         output_dir="data/database/partitioned")
 else:
     partitioned = True
+
+if should_upload_to_hdfs and partitioned:
+    print("Uploading media files to HDFS...")
+    process_and_upload_articles(
+        article_dir="data/database/articles",
+        science_partition_file="data/database/partitioned/article_science.json",
+        technology_partition_file="data/database/partitioned/article_technology.json"
+    )
 
 # Use pymongo to import data into MongoDB after partitioning
 if partitioned:
