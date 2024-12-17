@@ -1,8 +1,8 @@
 import os
 import subprocess
 from pymongo import MongoClient
-from data_generation import generate_data
-from data_partitioning import partition_all
+from utils.data_generation import generate_data
+from utils.data_partitioning import partition_all
 import json
 
 def docker_compose_up():
