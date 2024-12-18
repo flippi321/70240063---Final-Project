@@ -15,8 +15,11 @@ def setup():
 def get_clients():
     """Connect to MongoDB for both databases (DBMS1 and DBMS2)."""
     try:
-        client1 = MongoClient("localhost", 27017)  # DBMS1 (Beijing)
-        client2 = MongoClient("localhost", 27018)  # DBMS2 (Hong Kong)
+        dbms1_port  = os.getenv("DBMS1_PORT", 27017)
+        dbms2_port  = os.getenv("DBMS2_PORT", 27018)
+
+        client1 = MongoClient("localhost", dbms1_port)  # DBMS1 (Beijing)
+        client2 = MongoClient("localhost", dbms2_port)  # DBMS2 (Hong Kong)
         return client1, client2
     except ConnectionFailure as e:
         print(f"Error connecting to MongoDB: {e}")

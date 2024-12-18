@@ -73,8 +73,11 @@ def insert_data_into_collection(db, collection_name, file_path):
 def upload_data_to_mongodb(input_dir):
     """Uploads data into MongoDB instances."""
     try:
-        dbms1 = connect_to_mongodb("localhost", 27017, "DBMS1")
-        dbms2 = connect_to_mongodb("localhost", 27018, "DBMS2")
+        dbms1_port  = os.getenv("DBMS1_PORT", 27017)
+        dbms2_port  = os.getenv("DBMS2_PORT", 27018)
+
+        dbms1 = connect_to_mongodb("localhost", dbms1_port, "DBMS1")
+        dbms2 = connect_to_mongodb("localhost", dbms2_port, "DBMS2")
         
         if not dbms1 or not dbms2:
             return False
