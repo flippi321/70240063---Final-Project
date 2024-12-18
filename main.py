@@ -50,11 +50,12 @@ def main():
             exit(1)
 
         # User Input Loop
+        print("------------------------------------------------")
+        print("Welcome to our epic DB")
+        print("Write 'Status' to check collections or 'Exit' to exit.")
+        print("------------------------------------------------")
+
         while usr_inp.lower() != 'exit':
-            print("------------------------------------------------")
-            print("Welcome to our epic DB")
-            print("Write 'Status' to check collections or 'Exit' to exit.")
-            print("------------------------------------------------")
 
             usr_inp = input("Write your query: ").strip()
 
