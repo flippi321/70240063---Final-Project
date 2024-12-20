@@ -13,11 +13,13 @@ def is_docker_running():
             stdout=subprocess.PIPE,
             text=True
         )
+        """
         running_containers = result.stdout.strip().split("\n")
         if running_containers:
             print("Docker containers are already running.")
             return True
         return False
+        """
     except subprocess.CalledProcessError as e:
         print(f"Error checking Docker status: {e}")
         return False
@@ -38,11 +40,13 @@ def connect_to_mongodb(host, port, db_name):
     try:
         client = MongoClient(host, port)
         db = client[db_name]
+        db.list_collection_names()
         print(f"Connected to MongoDB: {host}:{port}/{db_name}")
         return db
     except Exception as e:
-        print(f"Error connecting to MongoDB: {e}")
+        print(f"Error connecting to MongoDB at {host}:{port}: {e}")
         return None
+
 
 def clear_database(db):
     """Clears all collections in a MongoDB database."""
@@ -75,12 +79,14 @@ def upload_data_to_mongodb(input_dir):
     try:
         dbms1_port  = os.getenv("DBMS1_PORT", 27017)
         dbms2_port  = os.getenv("DBMS2_PORT", 27018)
+        hadoop_port = os.getenv("HADOOP_PORT", 50070)
 
         dbms1 = connect_to_mongodb("localhost", dbms1_port, "DBMS1")
         dbms2 = connect_to_mongodb("localhost", dbms2_port, "DBMS2")
         
-        if not dbms1 or not dbms2:
+        if dbms1 is None or dbms2 is None:
             return False
+
         
         # Clear existing data
         if not clear_database(dbms1) or not clear_database(dbms2):
