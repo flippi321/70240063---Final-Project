@@ -32,11 +32,29 @@ def get_dbms_dbs(client1, client2):
     dbms2_db = client2["DBMS2"]  # Hong Kong database
     return dbms1_db, dbms2_db
 
+
+def split_query(query):
+    """
+    Split a query into command, collection, and JSON arguments.
+    Handles spaces inside JSON structures.
+
+    Ex.
+    find Article {"id":"a1"}                            Gets split into 3 pieces
+    delete Article {"id":"a1"}                          Gets split into 3 pieces
+    update Article {"id":"a1"} {"title":"New Title"}    Gets split into 4 pieces
+    """
+
+    # We first split the dataset into 3-4 parts: command, collection, arguments and (optional) update
+    parts = query.split(' ', maxsplit=3)
+
+    print(parts)
+    return parts
+
 def handle_query(dbms1_db, dbms2_db, query):
     """Process user query and interact with databases."""
     try:
         # Split the query into command and arguments
-        parts = query.split(' ', 2)  # Split into up to 3 parts: command, collection, arguments
+        parts = split_query(query)  # Split into up to 3 parts: command, collection, arguments
         command = parts[0].lower()
 
         if command == "status":
@@ -60,20 +78,45 @@ def handle_query(dbms1_db, dbms2_db, query):
             if len(parts) < 4:
                 print("Error: Update command requires a collection name, a filter, and an update.")
                 return
+
             collection_name, filter_str, update_str = parts[1], parts[2], parts[3]
             filter_query = eval(filter_str)
             update_query = eval(update_str)
-            result = dbms2_db[collection_name].update_one(filter_query, update_query)
-            print(f"Modified {result.modified_count} documents in collection '{collection_name}'.")
+
+            # Wrap the update query with $set
+            update_query = {"$set": update_query}
+            
+            # Attempt to update in DBMS1
+            dbms1_result = dbms1_db[collection_name].update_one(filter_query, update_query)
+            if dbms1_result.modified_count > 0:
+                print(f"Modified {dbms1_result.modified_count} document(s) in DBMS1 collection '{collection_name}'.")
+            else:
+                # If no documents were updated in DBMS1, try updating in DBMS2
+                dbms2_result = dbms2_db[collection_name].update_one(filter_query, update_query)
+                if dbms2_result.modified_count > 0:
+                    print(f"Modified {dbms2_result.modified_count} document(s) in DBMS2 collection '{collection_name}'.")
+                else:
+                    print("No matching documents found in either DBMS1 or DBMS2.")
+
 
         elif command == "delete":
             if len(parts) < 3:
                 print("Error: Delete command requires a collection name and a filter.")
                 return
-            collection_name = parts[1]
-            filter_query = eval(parts[2])
-            result = dbms2_db[collection_name].delete_one(filter_query)
-            print(f"Deleted {result.deleted_count} documents from collection '{collection_name}'.")
+            collection_name, filter_str = parts[1], parts[2]  # Use filter_str here
+            filter_query = eval(filter_str)  # Correctly evaluate the filter string
+            
+            # Attempt to delete in DBMS1
+            dbms1_result = dbms1_db[collection_name].delete_one(filter_query)
+            if dbms1_result.deleted_count > 0:
+                print(f"Deleted {dbms1_result.deleted_count} document(s) in DBMS1 collection '{collection_name}'.")
+            else:
+                # If no documents were deleted in DBMS1, try deleting in DBMS2
+                dbms2_result = dbms2_db[collection_name].delete_one(filter_query)
+                if dbms2_result.deleted_count > 0:
+                    print(f"Deleted {dbms2_result.deleted_count} document(s) in DBMS2 collection '{collection_name}'.")
+                else:
+                    print("No matching documents found in either DBMS1 or DBMS2.")
 
         elif command == "insert":
             if len(parts) < 3:
