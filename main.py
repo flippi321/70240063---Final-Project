@@ -49,9 +49,11 @@ def handle_query(dbms1_db, dbms2_db, query):
                 return
             collection_name = parts[1]
             filter_query = eval(parts[2])  # Convert filter string to dictionary
-            result = dbms2_db[collection_name].find(filter_query)
+            dbms1_result = list(dbms1_db[collection_name].find(filter_query))
+            dbms2_result = list(dbms2_db[collection_name].find(filter_query))
+            combined_result = dbms1_result + dbms2_result
             print(f"Results from collection '{collection_name}':")
-            for doc in result:
+            for doc in combined_result:
                 print(doc)
 
         elif command == "update":
