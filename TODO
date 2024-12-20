@@ -1,0 +1,4 @@
+- Copy data in database for safety reasons
+- Distribute science over both databases
+- Check that all query types work
+- Find smart way to distribute queries over DMBS without going one, then the other (Unlikely to be done)

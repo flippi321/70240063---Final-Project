@@ -1,6 +1,9 @@
 db-generation.zip
 data
 
+# pycache files for utils
+utils/__pycache__/
+
 # Output files 
 articles
 dat_files
