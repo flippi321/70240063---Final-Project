@@ -1,4 +1,5 @@
 import os
+import re
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
@@ -28,16 +29,23 @@ def split_query(query):
     Handles spaces inside JSON structures.
 
     Ex.
-    find Article {"id":"a1"}                            Gets split into 3 pieces
-    delete Article {"id":"a1"}                          Gets split into 3 pieces
-    update Article {"id":"a1"} {"title":"New Title"}    Gets split into 4 pieces
+    find Article {"id": "a1"}                           Gets split into 3 pieces
+    delete Article {"id": "a1"}                         Gets split into 3 pieces
+    update Article {"id": "a1"} {"title": "New Title"}  Gets split into 4 pieces
     """
 
-    # We first split the dataset into 3-4 parts: command, collection, arguments and (optional) update
-    parts = query.split(' ', maxsplit=3)
+    # We get the query prefix (command and collection)
+    query_prefix = query.split(" ")[:2]
 
-    print(parts)
-    return parts
+    # We get the arguments in json structure
+    regex = "[^{]+({[^}]+})+"
+    query_arguments = re.findall(regex, query)
+
+    combined_query = query_prefix + query_arguments
+
+    print(combined_query)
+
+    return combined_query
 
 def print_results(collection_name, result):
     """Print the results of a database operation."""
