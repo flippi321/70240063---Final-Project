@@ -8,18 +8,11 @@ from utils.data_partitioning import partition_all
 def is_docker_running():
     """Checks if Docker containers are running."""
     try:
-        result = subprocess.run(
+        subprocess.run(
             ["docker", "ps", "--filter", "name=docker-compose", "--format", "{{.Names}}"],
             stdout=subprocess.PIPE,
             text=True
         )
-        """
-        running_containers = result.stdout.strip().split("\n")
-        if running_containers:
-            print("Docker containers are already running.")
-            return True
-        return False
-        """
     except subprocess.CalledProcessError as e:
         print(f"Error checking Docker status: {e}")
         return False
