@@ -1,4 +1,27 @@
-- Copy data in database for safety reasons
-- Distribute science over both databases
-- Check that all query types work
-- Find smart way to distribute queries over DMBS without going one, then the other (Unlikely to be done)
+• Get Hadoop working
+• Implement Insert function that automatically allocates data to right DBMS
+• Implement JOIN functions between tables
+    - Both with and without arguments
+• "Populate the empty Be-Read table by inserting newly computed records into the Be-Read table."
+    - I have no clue what this means
+• Query the top-5 articles with articles details (text, image, and video if existing) (involving the join of Be-Read table and Article table)
+    - daily
+    - weekly
+    - monthly
+    - Custom duration?
+• Implement Monitoring of DBMS containers, showing
+    - Managed data (amount and location)
+    - Workload
+    - etc.  
+• Get actual replica consideration in our DMBS
+• Distribute science Articles over both databases
+    - Right now it's just given to one  
+    - Mabye have dynamic allocation, where we add by id or smt?
+• Find smart way to distribute queries over DMBS without going one, then the other (Unlikely to be done)
+
+
+(Optional) advanced functions:
+• Hot/ Cold Standby DBMSs for fault tolerance
+• Expansion at the DBMS-level allowing a new DBMS server to join
+• Dropping a DBMS server at will
+• Data migration from one data center to others
