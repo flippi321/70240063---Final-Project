@@ -47,20 +47,20 @@ def main():
 
     try:
         # Setup the databases
-        setup_sucess = setup()
-        if not setup_sucess:
+        setup_success = setup()
+        if not setup_success:
             print("Database setup failed. Exiting.")
             exit(1)
 
         # User Input Loop
         print("------------------------------------------------")
         print("Welcome to our epic DB")
-        print("Write 'Status' to check collections or 'Exit' to exit.")
+        print("Available commands: Status, Find, Update, Delete, Insert, Exit.")
         print("------------------------------------------------")
 
         while usr_inp.lower() != 'exit':
 
-            usr_inp = input("Write your query: ").strip()
+            usr_inp = input("\nWrite your query: ").strip()
 
             if usr_inp.lower() != 'exit':
                 handle_query(dbms1_db, dbms2_db, usr_inp)
