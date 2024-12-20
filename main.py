@@ -1,8 +1,5 @@
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
 from utils.db_setup import setup_databases
 from utils.dbms_utils import get_clients, get_dbms_dbs, split_query, handle_query
-import os
 
 def setup():
     """Setup the databases."""

@@ -1,3 +1,7 @@
+import os
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
+
 def get_clients():
     """Connect to MongoDB for both databases (DBMS1 and DBMS2)."""
     try:
