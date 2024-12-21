@@ -6,8 +6,8 @@ from pymongo.errors import ConnectionFailure
 def get_clients():
     """Connect to MongoDB for both databases (DBMS1 and DBMS2)."""
     try:
-        dbms1_port  = os.getenv("DBMS1_PORT", 27017)
-        dbms2_port  = os.getenv("DBMS2_PORT", 27018)
+        dbms1_port = int(os.getenv("DBMS1_PORT", 27017))
+        dbms2_port = int(os.getenv("DBMS2_PORT", 27018))
 
         client1 = MongoClient("localhost", dbms1_port)  # DBMS1 (Beijing)
         client2 = MongoClient("localhost", dbms2_port)  # DBMS2 (Hong Kong)

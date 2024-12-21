@@ -20,17 +20,6 @@ services:
     networks:
       - mongo-net
 
-  hadoop:
-    image: bde2020/hadoop-base:latest
-    container_name: hadoop
-    ports:
-      - "50070:50070"
-      - "9000:9000"
-    volumes:
-      - ./hadoop:/etc/hadoop:ro
-    networks:
-      - hadoop-net
-
   redis:
     image: redis:latest
     container_name: redis
@@ -41,4 +30,3 @@ services:
 
 networks:
   mongo-net:
-  hadoop-net:
