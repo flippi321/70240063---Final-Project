@@ -2,6 +2,10 @@ import os
 import json
 import subprocess
 from pymongo import MongoClient
+from utils.dbms_utils import (
+    get_dbms_dbs,
+    clear_all_data,
+)
 from utils.data_generation import generate_data
 from utils.data_partitioning import partition_all
 
@@ -52,6 +56,7 @@ def clear_database(db):
         print(f"Error clearing database {db.name}: {e}")
         return False
 
+# TODO USE UTILS INSTEAD
 def insert_data_into_collection(db, collection_name, file_path):
     """Inserts data from a JSON file into a MongoDB collection."""
     try:
@@ -70,19 +75,11 @@ def insert_data_into_collection(db, collection_name, file_path):
 def upload_data_to_mongodb(input_dir):
     """Uploads data into MongoDB instances."""
     try:
-        dbms1_port  = os.getenv("DBMS1_PORT", 27017)
-        dbms2_port  = os.getenv("DBMS2_PORT", 27018)
-        hadoop_port = os.getenv("HADOOP_PORT", 50070)
+        # We get our databases
+        dbms1, dbms2 = get_dbms_dbs()
 
-        dbms1 = connect_to_mongodb("localhost", dbms1_port, "DBMS1")
-        dbms2 = connect_to_mongodb("localhost", dbms2_port, "DBMS2")
-        
-        if dbms1 is None or dbms2 is None:
-            return False
-
-        
         # Clear existing data
-        if not clear_database(dbms1) or not clear_database(dbms2):
+        if not clear_all_data():
             return False
 
         data_mappings = [
