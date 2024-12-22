@@ -22,6 +22,22 @@ def get_dbms_dbs(client1, client2):
     dbms2_db = client2["DBMS2"]  # Hong Kong database
     return dbms1_db, dbms2_db
 
+def clear_database(db):
+    """Clears all collections in the database."""
+    try:
+        for collection_name in db.list_collection_names():
+            db[collection_name].delete_many({})
+            print(f"Cleared collection: {collection_name} in database {db.name}")
+        return True
+    except Exception as e:
+        print(f"Error clearing database {db.name}: {e}")
+        return False
+    
+def clear_all_data():
+    clients = get_clients()
+    dbms1_db, dbms2_db = get_dbms_dbs(clients)
+    clear_result = clear_database(dbms1_db) and clear_database(dbms2_db)
+    return clear_result
 
 def split_query(query):
     """
