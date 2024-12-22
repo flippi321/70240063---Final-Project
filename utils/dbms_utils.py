@@ -69,29 +69,84 @@ def print_results(collection_name, result):
     for doc in result:
         print(doc)
 
+def get_user_by_id(user_id):
+    return {"Region": "Beijing"}
+
+# --------------- CRUD Seperation Funcitons ---------------
+
+def split_data_by_database(collection_name, data):
+    """
+    Splits the data based on logic specific to the collection.
+    Returns two lists: data for DBMS1 and data for DBMS2.
+    """
+    dbms1_data = []
+    dbms2_data = []
+
+    for document in data:
+        # Partition users by region
+        if collection_name == "user":
+            if document.get("region") == "Beijing":
+                dbms1_data.append(document)
+            elif document.get("region") == "Hong Kong":
+                dbms2_data.append(document)
+        
+        # Partition reads based on users region
+        elif collection_name == "read":
+            user_id = data["uid"]
+            user = get_user_by_id(user_id)
+            user_region = user["region"]
+            if user_region == "Beijing":
+                dbms1_data.append(document)
+            elif user_region == "Hong Kong":
+                dbms2_data.append(document)
+            else:
+                print(f"Could not find user {user_id}")
+
+        # Partition articles by category
+        elif collection_name == "article":
+            if document.get("category") == "science":
+                dbms1_data.append(document)
+            elif document.get("category") == "technology":
+                dbms2_data.append(document)
+                
+        # If the user adds a non-existen collection
+        else:
+            print(f"Unknown collection '{collection_name}', adding to DBMS1 by default.")
+            dbms1_data.append(document)
+
+    return dbms1_data, dbms2_data
+
 # --------------- CRUD Operations --------------- 
-def handle_insert(dbms1_db, dbms2_db, collection_name, document, should_print=True):
-    """Insert a document into a collection."""
-    if collection_name == None or document == None:
-        print("Error: Insert command requires a collection name and a document.")
-        return
-    document = eval(document)
-    # TODO SEPERATE DATA
-    result = dbms2_db[collection_name].insert_one(document)
-    if should_print: 
-        print(f"Inserted document with ID {result.inserted_id} into collection '{collection_name}'.")
+def handle_insert(dbms1_db, dbms2_db, collection_name, document, should_print=True, multiple=False):
+    """Insert a documents into a collection."""
+    if not collection_name or not document:
+        print("Error: Insert command requires a collection name and documents.")
+        return False
+    
+    # Split the data effectively between the two databases
+    dbms1_data, dbms2_data = split_data_by_database(collection_name, document)
+    
+    # Insert into dbms1
+    if dbms1_data:
+        if multiple:
+            dbms1_db[collection_name].insert_multiple(dbms1_data)
+        else:
+            dbms1_db[collection_name].insert_one(dbms1_data)
+        
+        if should_print:
+            print(f"Inserted {len(dbms1_data)} documents into DBMS1, collection '{collection_name}'.")
 
-def handle_insert_multiple(dbms1_db, dbms2_db, collection_name, documents, should_print=True):
-    """Insert a document with multilpe values into a collection."""
-    if collection_name == None or document == None:
-        print("Error: Insert command requires a collection name and a document.")
-        return
-    document = eval(document)
-    # TODO SEPERATE DATA
-    results = dbms2_db[collection_name].insert_multiple(document)
-    if should_print: 
-        print(f"Inserted documents into collection '{collection_name}'.")
+    # Insert into dbms2
+    if dbms2_data:
+        if multiple:
+            dbms2_db[collection_name].insert_multiple(dbms2_data)
+        else:
+            dbms2_db[collection_name].insert_one(dbms2_data)
 
+        if should_print:
+            print(f"Inserted {len(dbms2_data)} documents into DBMS2, collection '{collection_name}'.")
+
+    return True
 
 def handle_find(dbms1_db, dbms2_db, collection_name, filter):
     """Find documents in a collection."""
@@ -150,32 +205,28 @@ def handle_query(dbms1_db, dbms2_db, query):
         query_parts = split_query(query)  # Split into up to 3 parts: command, collection, arguments
         command = query_parts[0].lower()
 
+        collection_name = query_parts[1]
+
         if command == "status":
             print("DBMS1 Collections:", dbms1_db.list_collection_names())
             print("DBMS2 Collections:", dbms2_db.list_collection_names())
 
         # Find documents matching filter in any of the Databases
         elif command == "find":
-            handle_find(dbms1_db, dbms2_db, query_parts[1], query_parts[2])
+            handle_find(dbms1_db, dbms2_db, collection_name, query_parts[2])
 
         # Update first document matching filter in any of the Databases
         elif command == "update":
-            handle_update(dbms1_db, dbms2_db, query_parts[1], query_parts[2], query_parts[3])
+            handle_update(dbms1_db, dbms2_db, collection_name, query_parts[2], query_parts[3])
 
         # Delete first document matching filter in any of the Databases
         elif command == "delete":
-            handle_delete(dbms1_db, dbms2_db, query_parts[1], query_parts[2])
+            handle_delete(dbms1_db, dbms2_db, collection_name, query_parts[2])
 
         # Insert a document into a collection
         elif command == "insert":
             # TODO FILTER WHICH DBMS TO INSERT INTO
-            if len(query_parts) < 3:
-                print("Error: Insert command requires a collection name and a document.")
-                return
-            collection_name = query_parts[1]
-            document = eval(query_parts[2])
-            result = dbms2_db[collection_name].insert_one(document)
-            print(f"Inserted document with ID {result.inserted_id} into collection '{collection_name}'.")
+            handle_insert(dbms1_db, dbms2_db, collection_name, query_parts[2])
 
         elif command == "shitfuck":
             print("Shitfucking...")
