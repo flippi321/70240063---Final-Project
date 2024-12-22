@@ -27,7 +27,7 @@ def main():
         # User Input Loop
         print("------------------------------------------------")
         print("Welcome to our epic DB")
-        print("Available commands: Status, Find, Update, Delete, Insert, Exit.")
+        print("Available commands: status, find, find_top_articles, find_articles_read, update, delete, insert, exit.")
         print("------------------------------------------------")
 
         while usr_inp.lower() != 'exit':

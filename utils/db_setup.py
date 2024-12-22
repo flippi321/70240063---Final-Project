@@ -5,7 +5,8 @@ import subprocess
 from pymongo import MongoClient
 from utils.data_generation import generate_data
 from utils.data_partitioning import partition_all
-from utils.upload_bulk import bulk_upload_articles
+from utils.upload_media import bulk_upload_articles
+from utils.populate_dbs import populate_be_read_table, populate_popular_rank
 
 def is_docker_running():
     """Checks if Docker containers are running."""
@@ -164,11 +165,21 @@ def setup_databases(
         print("Data upload to MongoDB failed.")
         return False
     
+    # Populate Be-Read table
+    print("Populating Be-Read table...")
+    populate_be_read_table()
+    print("Be-Read table populated.")
+    
+    # Populate Popular-Rank table
+    print("Populating Popular-Rank table...")
+    populate_popular_rank()
+    print("Popular-Rank table populated.")
+
     # Upload unstructured media (bulk media upload)
     print("Uploading media files to GridFS...")
     start_bulk = time.time()
     try:
-        bulk_upload_articles("data/database/articles")  # Call the bulk upload function
+        bulk_upload_articles()  # Call the bulk upload function
         print("Media files uploaded successfully.")
     except Exception as e:
         print(f"Error during media upload: {e}")

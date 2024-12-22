@@ -26,5 +26,5 @@ def read_file_into_variable(filename):
         return None
 
 # How to read a file:
-# test = read_file_into_variable("text_a9981.txt")
-# print(test)
+# text_text_a9981 = read_file_into_variable("text_a9981.txt")
+# print(text_text_a9981)

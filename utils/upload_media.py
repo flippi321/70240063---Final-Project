@@ -35,20 +35,44 @@ def upload_files_to_gridfs(dir, db, bucket):
             else:
                 file_id = bucket.put(file, filename=fname)
 
+# Function to upload new media
+def upload_new_media(file_path):
+    # Check if file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return None
+
+    # Get file name
+    filename = os.path.basename(file_path)
+
+    # Connect to GridFS
+    _, bucket = connect_to_db()
+
+    # Check if file already exists in GridFS
+    if bucket.exists({"filename": filename}):
+        print(f"File {filename} already exists in GridFS. Skipping upload.")
+        return None
+
+    # Upload the file to GridFS
+    with open(file_path, "rb") as file:
+        file_id = bucket.put(file, filename=filename)
+        print(f"Uploaded {filename} to GridFS with file_id {file_id}")
+        return file_id
+
 # Process all article directories for bulk media upload
-def bulk_upload_articles(base_dir):
+def bulk_upload_articles():
     db, bucket = connect_to_db()
     debug_counter = 0
-    for article_dir in os.listdir(base_dir):
-        article_path = os.path.join(base_dir, article_dir)
+    for article_dir in os.listdir(ARTICLES_DIR_PATH):
+        article_path = os.path.join(ARTICLES_DIR_PATH, article_dir)
         if os.path.isdir(article_path):
             upload_files_to_gridfs(article_path, db, bucket)
         
         debug_counter += 1
         if debug_counter % 100 == 0:
-            print(f"Uploaded media for {debug_counter}/{len(os.listdir(base_dir))} articles.")
+            print(f"Uploaded media for {debug_counter}/{len(os.listdir(ARTICLES_DIR_PATH))} articles.")
     
 
 # Main entry point
 if __name__ == "__main__":
-    bulk_upload_articles(ARTICLES_DIR_PATH)
+    bulk_upload_articles()
