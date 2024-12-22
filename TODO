@@ -5,6 +5,7 @@
     - weekly
     - monthly
     - Custom duration?
+• Implement Insert function that automatically allocates data to right DBMS
 
  ---------- In Progress ---------- 
 Jakob:
@@ -13,11 +14,10 @@ Jakob:
 
 Chriss:
 • Get actual replica consideration in our DMBS
-• Implement Insert function that automatically allocates data to right DBMS
-
- ---------- Not Done nor Planned ---------- 
 • Implement JOIN functions between tables
     - Both with and without arguments
+
+ ---------- Not Done nor Planned ---------- 
 • Implement Monitoring of DBMS containers, showing
     - Managed data (amount and location)
     - Workload
@@ -25,6 +25,9 @@ Chriss:
 • Distribute science Articles over both databases
     - Right now it's just given to one  
     - Mabye have dynamic allocation, where we add by id or smt?
+    - If not, we just randomly allocate
+• GUI
+    - At least use Tabulate in console
 
  ---------- (Optional) advanced functions  ---------- 
 • Hot/ Cold Standby DBMSs for fault tolerance
