@@ -1,26 +1,32 @@
+ ---------- Done ---------- 
 • Get Hadoop working
-• Implement Insert function that automatically allocates data to right DBMS
-• Implement JOIN functions between tables
-    - Both with and without arguments
-• "Populate the empty Be-Read table by inserting newly computed records into the Be-Read table."
-    - I have no clue what this means
 • Query the top-5 articles with articles details (text, image, and video if existing) (involving the join of Be-Read table and Article table)
     - daily
     - weekly
     - monthly
     - Custom duration?
+
+ ---------- In Progress ---------- 
+Jakob:
+• "Populate the empty Be-Read table by inserting newly computed records into the Be-Read table."
+    - I have no clue what this means
+
+Chriss:
+• Get actual replica consideration in our DMBS
+• Implement Insert function that automatically allocates data to right DBMS
+
+ ---------- Not Done nor Planned ---------- 
+• Implement JOIN functions between tables
+    - Both with and without arguments
 • Implement Monitoring of DBMS containers, showing
     - Managed data (amount and location)
     - Workload
     - etc.  
-• Get actual replica consideration in our DMBS
 • Distribute science Articles over both databases
     - Right now it's just given to one  
     - Mabye have dynamic allocation, where we add by id or smt?
-• Find smart way to distribute queries over DMBS without going one, then the other (Unlikely to be done)
 
-
-(Optional) advanced functions:
+ ---------- (Optional) advanced functions  ---------- 
 • Hot/ Cold Standby DBMSs for fault tolerance
 • Expansion at the DBMS-level allowing a new DBMS server to join
 • Dropping a DBMS server at will
