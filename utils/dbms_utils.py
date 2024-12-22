@@ -16,8 +16,9 @@ def get_clients():
         print(f"Error connecting to MongoDB: {e}")
         exit(1)
 
-def get_dbms_dbs(client1, client2):
+def get_dbms_dbs():
     """Retrieve database objects for DBMS1 and DBMS2."""
+    client1, client2 = get_clients()
     dbms1_db = client1["DBMS1"]  # Beijing database
     dbms2_db = client2["DBMS2"]  # Hong Kong database
     return dbms1_db, dbms2_db
@@ -34,8 +35,7 @@ def clear_database(db):
         return False
     
 def clear_all_data():
-    clients = get_clients()
-    dbms1_db, dbms2_db = get_dbms_dbs(clients)
+    dbms1_db, dbms2_db = get_dbms_dbs()
     clear_result = clear_database(dbms1_db) and clear_database(dbms2_db)
     return clear_result
 
