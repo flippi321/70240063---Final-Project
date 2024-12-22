@@ -70,6 +70,29 @@ def print_results(collection_name, result):
         print(doc)
 
 # --------------- CRUD Operations --------------- 
+def handle_insert(dbms1_db, dbms2_db, collection_name, document, should_print=True):
+    """Insert a document into a collection."""
+    if collection_name == None or document == None:
+        print("Error: Insert command requires a collection name and a document.")
+        return
+    document = eval(document)
+    # TODO SEPERATE DATA
+    result = dbms2_db[collection_name].insert_one(document)
+    if should_print: 
+        print(f"Inserted document with ID {result.inserted_id} into collection '{collection_name}'.")
+
+def handle_insert_multiple(dbms1_db, dbms2_db, collection_name, documents, should_print=True):
+    """Insert a document with multilpe values into a collection."""
+    if collection_name == None or document == None:
+        print("Error: Insert command requires a collection name and a document.")
+        return
+    document = eval(document)
+    # TODO SEPERATE DATA
+    results = dbms2_db[collection_name].insert_multiple(document)
+    if should_print: 
+        print(f"Inserted documents into collection '{collection_name}'.")
+
+
 def handle_find(dbms1_db, dbms2_db, collection_name, filter):
     """Find documents in a collection."""
     if collection_name == None or filter == None:
