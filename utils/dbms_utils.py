@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 
@@ -84,14 +85,16 @@ def split_data_by_database(collection_name, data):
 
     for document in data:
         # Partition users by region
-        if collection_name == "user":
-            if document.get("region") == "Beijing":
+        if collection_name == "User":
+            if document["region"] == "Beijing":
                 dbms1_data.append(document)
-            elif document.get("region") == "Hong Kong":
+            elif document["region"] == "Hong Kong":
                 dbms2_data.append(document)
+            else:
+                print("User entry didn't contain a region, this is required")
         
         # Partition reads based on users region
-        elif collection_name == "read":
+        elif collection_name == "Read":
             user_id = data["uid"]
             user = get_user_by_id(user_id)
             user_region = user["region"]
@@ -103,10 +106,10 @@ def split_data_by_database(collection_name, data):
                 print(f"Could not find user {user_id}")
 
         # Partition articles by category
-        elif collection_name == "article":
-            if document.get("category") == "science":
+        elif collection_name == "Article":
+            if document["category"] == "science":
                 dbms1_data.append(document)
-            elif document.get("category") == "technology":
+            elif document["category"] == "technology":
                 dbms2_data.append(document)
                 
         # If the user adds a non-existen collection
@@ -117,36 +120,42 @@ def split_data_by_database(collection_name, data):
     return dbms1_data, dbms2_data
 
 # --------------- CRUD Operations --------------- 
-def handle_insert(dbms1_db, dbms2_db, collection_name, document, should_print=True, multiple=False):
+def handle_insert(dbms1_db, dbms2_db, collection_name, entries, should_print=True, multiple=False):
     """Insert a documents into a collection."""
-    if not collection_name or not document:
+    if not collection_name or not entries:
         print("Error: Insert command requires a collection name and documents.")
         return False
     
-    # Split the data effectively between the two databases
-    dbms1_data, dbms2_data = split_data_by_database(collection_name, document)
-    
-    # Insert into dbms1
-    if dbms1_data:
-        if multiple:
-            dbms1_db[collection_name].insert_multiple(dbms1_data)
-        else:
-            dbms1_db[collection_name].insert_one(dbms1_data)
-        
-        if should_print:
-            print(f"Inserted {len(dbms1_data)} documents into DBMS1, collection '{collection_name}'.")
+    try:
+        # Convert the JSON string into a Python dictionary
+        if isinstance(entries, str):
+            entries = json.loads(entries)
 
-    # Insert into dbms2
-    if dbms2_data:
-        if multiple:
-            dbms2_db[collection_name].insert_multiple(dbms2_data)
-        else:
-            dbms2_db[collection_name].insert_one(dbms2_data)
+        if not multiple:
+            entries = [entries]
 
-        if should_print:
-            print(f"Inserted {len(dbms2_data)} documents into DBMS2, collection '{collection_name}'.")
+        # Split the data effectively between the two databases
+        dbms1_data, dbms2_data = split_data_by_database(collection_name, entries)
 
-    return True
+        # Insert into dbms1
+        if dbms1_data:
+            dbms1_db[collection_name].insert_many(dbms1_data)
+            if should_print:
+                print(f"Inserted {len(dbms1_data)} documents into DBMS1, collection '{collection_name}'.")
+
+        # Insert into dbms2
+        if dbms2_data:
+            dbms2_db[collection_name].insert_many(dbms2_data)
+            if should_print:
+                print(f"Inserted {len(dbms2_data)} documents into DBMS2, collection '{collection_name}'.")
+
+        return True
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+        return False
+    except Exception as e:
+        print(f"Error during insert: {e}")
+        return False
 
 def handle_find(dbms1_db, dbms2_db, collection_name, filter):
     """Find documents in a collection."""
@@ -201,40 +210,47 @@ def handle_delete(dbms1_db, dbms2_db, collection_name, filter_str):
 def handle_query(dbms1_db, dbms2_db, query):
     """Process user query and interact with databases."""
     try:
-        # Split the query into command and arguments
-        query_parts = split_query(query)  # Split into up to 3 parts: command, collection, arguments
-        command = query_parts[0].lower()
-
-        collection_name = query_parts[1]
-
-        if command == "status":
+        # If user is asking for status, we don't need any splitting
+        if query.lower() == "status":
             print("DBMS1 Collections:", dbms1_db.list_collection_names())
             print("DBMS2 Collections:", dbms2_db.list_collection_names())
-
-        # Find documents matching filter in any of the Databases
-        elif command == "find":
-            handle_find(dbms1_db, dbms2_db, collection_name, query_parts[2])
-
-        # Update first document matching filter in any of the Databases
-        elif command == "update":
-            handle_update(dbms1_db, dbms2_db, collection_name, query_parts[2], query_parts[3])
-
-        # Delete first document matching filter in any of the Databases
-        elif command == "delete":
-            handle_delete(dbms1_db, dbms2_db, collection_name, query_parts[2])
-
-        # Insert a document into a collection
-        elif command == "insert":
-            # TODO FILTER WHICH DBMS TO INSERT INTO
-            handle_insert(dbms1_db, dbms2_db, collection_name, query_parts[2])
-
-        elif command == "shitfuck":
-            print("Shitfucking...")
-            for doc in dbms2_db["User"].find():
-                print(doc)
-
+        
         else:
-            print("Unknown command. Available commands: Status, Find, Update, Delete, Insert.")
+            # Split the query into command and arguments
+            query_parts = split_query(query)  # Split into up to 3+ parts: command, collection, arguments & (optionally) data
+            command = query_parts[0].lower()
+
+            collection_name = query_parts[1]
+
+            
+            # Find documents matching filter in any of the Databases
+            if command == "find":
+                handle_find(dbms1_db, dbms2_db, collection_name, query_parts[2])
+
+            # Update first document matching filter in any of the Databases
+            elif command == "update":
+                handle_update(dbms1_db, dbms2_db, collection_name, query_parts[2], query_parts[3])
+
+            # Delete first document matching filter in any of the Databases
+            elif command == "delete":
+                handle_delete(dbms1_db, dbms2_db, collection_name, query_parts[2])
+
+            # Insert a document into a collection
+            elif command == "insert":
+                # TODO FILTER WHICH DBMS TO INSERT INTO
+                handle_insert(dbms1_db, dbms2_db, collection_name, query_parts[2])
+
+            elif command == "insert_multiple":
+                # TODO FILTER WHICH DBMS TO INSERT INTO
+                handle_insert(dbms1_db, dbms2_db, collection_name, query_parts[2], multiple=True)
+
+            elif command == "shitfuck":
+                print("Shitfucking...")
+                for doc in dbms2_db["User"].find():
+                    print(doc)
+
+            else:
+                print("Unknown command. Available commands: Status, Find, Update, Delete, Insert.")
 
     except Exception as e:
         print(f"Error handling query: {e}")
