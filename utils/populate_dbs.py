@@ -4,8 +4,7 @@ from utils.dbms_utils import get_clients, get_dbms_dbs
 
 def get_dbs():
     """ Get both databases. """
-    client1, client2 = get_clients()
-    return get_dbms_dbs(client1, client2)
+    return get_dbms_dbs()
 
 def calculate_popularity_score(be_read_record):
     """Calculate a popularity score based on Be-Read metrics."""
