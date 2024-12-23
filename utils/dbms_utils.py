@@ -3,12 +3,13 @@ import re
 import json
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from utils.read_media import read_file_into_variable
 
 def get_clients():
     """Connect to MongoDB for both databases (DBMS1 and DBMS2)."""
     try:
-        dbms1_port  = os.getenv("DBMS1_PORT", 27017)
-        dbms2_port  = os.getenv("DBMS2_PORT", 27018)
+        dbms1_port = int(os.getenv("DBMS1_PORT", 27017))
+        dbms2_port = int(os.getenv("DBMS2_PORT", 27018))
 
         client1 = MongoClient("localhost", dbms1_port)  # DBMS1 (Beijing)
         client2 = MongoClient("localhost", dbms2_port)  # DBMS2 (Hong Kong)
@@ -57,6 +58,7 @@ def split_query(query):
     # We get the arguments in json structure
     regex = "[^{]+({[^}]+})+"
     query_arguments = re.findall(regex, query)
+    print(query_arguments)
 
     combined_query = query_prefix + query_arguments
 
@@ -289,7 +291,38 @@ def handle_query(dbms1_db, dbms2_db, query):
 
             # Update first document matching filter in any of the Databases
             elif command == "update":
-                handle_update(dbms1_db, dbms2_db, collection_name, query_parts[2], query_parts[3])
+                handle_update(dbms1_db, dbms2_db, query_parts[1], query_parts[2], query_parts[3])
+
+            elif command == "find_articles_read":
+                read_articles = join_user_article(dbms1_db, dbms2_db, eval(query_parts[1]))
+                print(f"Results for articles that user {query_parts[1]} read: {read_articles}")
+
+            elif command == "find_top_articles":
+                top_articles = join_beread_article(dbms1_db, dbms2_db, query_parts[1])
+                top_articles_media = []
+
+                for article in top_articles:
+                    article_media = {'id': article['id']}
+                    # Retrieve text content
+                    if article.get("text"):
+                        article_media["text_content"] = read_file_into_variable(article["text"])
+                    
+                    # Retrieve image content
+                    if article.get("image"):
+                        image_filenames = article["image"].strip(',').split(',')  # Split multiple filenames
+                        article_media["image_content"] = [
+                            read_file_into_variable(image) for image in image_filenames
+                        ]
+                    
+                    # Retrieve video content
+                    if article.get("video"):
+                        article_media["video_content"] = read_file_into_variable(article["video"])
+                    
+                    top_articles_media.append(article_media)
+                
+                print(f"Results for top 5 articles {query_parts[1]}: {top_articles}")
+
+                return top_articles, top_articles_media
 
             # Delete first document matching filter in any of the Databases
             elif command == "delete":
@@ -319,3 +352,82 @@ def handle_query(dbms1_db, dbms2_db, query):
 
     except Exception as e:
         print(f"Error handling query: {e}")
+
+
+###########################
+########## JOINS ##########
+
+def join_user_article(dbms1_db, dbms2_db, user_filter):
+    """Joins User and Article tables based on user's read activity."""
+    # Step 1: Fetch users matching the filter
+    users = list(dbms1_db['User'].find(user_filter)) + list(dbms2_db['User'].find(user_filter))
+    uids = [user['uid'] for user in users]
+    
+    if not uids:
+        print("No users found matching the criteria.")
+        return []
+    
+    # Step 2: Fetch reads by these users
+    reads = list(dbms1_db['Read'].find({"uid": {"$in": uids}})) + list(dbms2_db['Read'].find({"uid": {"$in": uids}}))
+    aids = [read['aid'] for read in reads]
+    
+    if not aids:
+        print("No articles found read by the specified users.")
+        return []
+    
+    # Step 3: Fetch articles by their IDs
+    articles = list(dbms1_db['Article'].find({"aid": {"$in": aids}})) + list(dbms2_db['Article'].find({"aid": {"$in": aids}}))
+    
+    return articles
+
+
+def join_beread_article(dbms1_db, dbms2_db, temporal_granularity="daily"):
+    """Joins Be-Read and Article tables to get popular articles with details."""
+    # Step 1: Fetch popular articles based on temporal granularity
+    popular_rank = list(dbms1_db['Popular-Rank'].find({"temporalGranularity": temporal_granularity})) + \
+                   list(dbms2_db['Popular-Rank'].find({"temporalGranularity": temporal_granularity}))
+    
+    if not popular_rank:
+        print(f"No popular articles found for {temporal_granularity} granularity.")
+        return []
+    
+    # Extract top article IDs
+    article_aid_list = popular_rank[0].get('articleAidList', [])  # Assume articleAidList is sorted
+    
+    if not article_aid_list:
+        print("No article IDs found in the popular rank.")
+        return []
+    
+    # Step 2: Fetch article details by their IDs
+    articles = list(dbms1_db['Article'].find({"aid": {"$in": article_aid_list}})) + \
+               list(dbms2_db['Article'].find({"aid": {"$in": article_aid_list}}))
+    
+    return articles
+
+
+def join_collections(dbms1_db, dbms2_db, collection1, collection2, match_key, projection1=None, projection2=None):
+    """
+    Generalized join between two collections in distributed databases.
+
+    Args:
+        dbms1_db, dbms2_db: MongoDB database objects.
+        collection1, collection2: Names of the collections to join.
+        match_key: The key to join on.
+        projection1, projection2: Fields to include in the result from each collection.
+    """
+    # Fetch data from collection1
+    data1 = list(dbms1_db[collection1].find({}, projection1)) + list(dbms2_db[collection1].find({}, projection1))
+    match_values = [doc[match_key] for doc in data1]
+    
+    if not match_values:
+        print(f"No matching documents found in {collection1}.")
+        return []
+    
+    # Fetch matching data from collection2
+    data2 = list(dbms1_db[collection2].find({match_key: {"$in": match_values}}, projection2)) + \
+            list(dbms2_db[collection2].find({match_key: {"$in": match_values}}, projection2))
+    
+    # Combine the data
+    joined_data = [{**doc1, **next((doc2 for doc2 in data2 if doc2[match_key] == doc1[match_key]), {})} for doc1 in data1]
+    
+    return joined_data

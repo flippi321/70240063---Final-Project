@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import subprocess
 from pymongo import MongoClient
 from utils.dbms_utils import (
@@ -8,6 +9,8 @@ from utils.dbms_utils import (
 )
 from utils.data_generation import generate_data
 from utils.data_partitioning import partition_all
+from utils.upload_media import bulk_upload_articles
+from utils.populate_dbs import populate_be_read_table, populate_popular_rank
 
 def is_docker_running():
     """Checks if Docker containers are running."""
@@ -75,9 +78,17 @@ def insert_data_into_collection(db, collection_name, file_path):
 def upload_data_to_mongodb(input_dir):
     """Uploads data into MongoDB instances."""
     try:
-        # We get our databases
-        dbms1, dbms2 = get_dbms_dbs()
+        dbms1_port = int(os.getenv("DBMS1_PORT", 27017))
+        dbms2_port = int(os.getenv("DBMS2_PORT", 27018))
+        #hadoop_port = os.getenv("HADOOP_PORT", 50070)
 
+        dbms1 = connect_to_mongodb("localhost", dbms1_port, "DBMS1")
+        dbms2 = connect_to_mongodb("localhost", dbms2_port, "DBMS2")
+        
+        if dbms1 is None or dbms2 is None:
+            return False
+
+        
         # Clear existing data
         if not clear_all_data():
             return False
@@ -158,6 +169,28 @@ def setup_databases(
     if not upload_data_to_mongodb(data_partitioned_dir):
         print("Data upload to MongoDB failed.")
         return False
+    
+    # Populate Be-Read table
+    print("Populating Be-Read table...")
+    populate_be_read_table()
+    print("Be-Read table populated.")
+    
+    # Populate Popular-Rank table
+    print("Populating Popular-Rank table...")
+    populate_popular_rank()
+    print("Popular-Rank table populated.")
+
+    # Upload unstructured media (bulk media upload)
+    print("Uploading media files to GridFS...")
+    start_bulk = time.time()
+    try:
+        bulk_upload_articles()  # Call the bulk upload function
+        print("Media files uploaded successfully.")
+    except Exception as e:
+        print(f"Error during media upload: {e}")
+        return False
+    loading_bulk_duration = time.time() - start_bulk
+    print(f"Bulk uploading duration: {loading_bulk_duration} seconds.")
 
     print("Database setup completed successfully.")
     return True
