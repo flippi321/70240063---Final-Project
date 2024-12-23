@@ -304,6 +304,9 @@ def handle_query(dbms1_db, dbms2_db, query):
                 # TODO FILTER WHICH DBMS TO INSERT INTO
                 handle_insert(dbms1_db, dbms2_db, query_parts[1], query_parts[2], multiple=True)
 
+            else:
+                print("Unknown command. Available commands: Status, Find, Update, Delete, Insert.")
+
             """
             elif command == "join":
                 # Parse the join query parts
@@ -313,9 +316,6 @@ def handle_query(dbms1_db, dbms2_db, query):
 
                 handle_join(dbms1_db, dbms2_db, collection_name, collection2, match_field, conditions)
             """
-
-            else:
-                print("Unknown command. Available commands: Status, Find, Update, Delete, Insert.")
 
     except Exception as e:
         print(f"Error handling query: {e}")
