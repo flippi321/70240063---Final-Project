@@ -3,6 +3,10 @@ import json
 import time
 import subprocess
 from pymongo import MongoClient
+from utils.dbms_utils import (
+    get_dbms_dbs,
+    clear_all_data,
+)
 from utils.data_generation import generate_data
 from utils.data_partitioning import partition_all
 from utils.upload_media import bulk_upload_articles
@@ -55,6 +59,7 @@ def clear_database(db):
         print(f"Error clearing database {db.name}: {e}")
         return False
 
+# TODO USE UTILS INSTEAD
 def insert_data_into_collection(db, collection_name, file_path):
     """Inserts data from a JSON file into a MongoDB collection."""
     try:
@@ -85,7 +90,7 @@ def upload_data_to_mongodb(input_dir):
 
         
         # Clear existing data
-        if not clear_database(dbms1) or not clear_database(dbms2):
+        if not clear_all_data():
             return False
 
         data_mappings = [

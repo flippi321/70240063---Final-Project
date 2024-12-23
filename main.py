@@ -14,8 +14,7 @@ def setup():
 # Main loop for user interaction
 def main():
     usr_inp = ''
-    client1, client2 = get_clients()
-    dbms1_db, dbms2_db = get_dbms_dbs(client1, client2)
+    dbms1_db, dbms2_db = get_dbms_dbs()
 
     try:
         # Setup the databases
@@ -38,6 +37,7 @@ def main():
                 handle_query(dbms1_db, dbms2_db, usr_inp)
     finally:
         # Ensure MongoDB connections are closed
+        client1, client2 = get_clients()
         client1.close()
         client2.close()
         print("Connections closed.")
