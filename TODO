@@ -14,16 +14,19 @@
  
 Jakob:
 • Figure out JOIN situation
-• Implement updates to Be-Read
-
-Chriss:
 • Implement Monitoring of DBMS containers, showing
     - Managed data (amount and location)
     - Workload
     - etc. 
+• Implement updates to Be-Read
+
+Chriss:
+• Seperate Be-Read into fragments
 • Get actual replica consideration in our DMBS
 
  ---------- Not Done nor Planned ---------- 
+• Make sure queries can be without any conditions
+
 • Optimize Be-Read
 
 • Distribute science Articles over both databases
@@ -39,11 +42,11 @@ Chriss:
 
 • Proper error handling
 
+• Clean up setup console logs
 
 • STRESS TEST
     - No bugs
     - No visually slow sections
-    - 
 
  ---------- (Optional) advanced functions  ---------- 
 • GUI
