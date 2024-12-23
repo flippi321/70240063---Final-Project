@@ -95,7 +95,7 @@ def split_data_by_database(collection_name, data):
         
         # Partition reads based on users region
         elif collection_name == "Read":
-            user_id = data["uid"]
+            user_id = document["uid"]
             user = get_user_by_id(user_id)
             user_region = user["region"]
             if user_region == "Beijing":
@@ -111,7 +111,21 @@ def split_data_by_database(collection_name, data):
                 dbms1_data.append(document)
             elif document["category"] == "technology":
                 dbms2_data.append(document)
-                
+
+        # Parition Be-Read
+        elif collection_name == "Be-Read":
+            dbms1_db, dbms2_db = get_dbms_dbs()
+            filter = eval('{"aid": ' + f'"{document["aid"]}"' + '}')
+            dbms1_result = list(dbms1_db["Article"].find(filter))
+            dbms2_result = list(dbms2_db["Article"].find(filter))
+            combined_result = dbms1_result + dbms2_result
+            matching_document = combined_result[0]
+
+            if matching_document["category"] == "science":
+                dbms1_data.append(document)
+            elif matching_document["category"] == "technology":
+                dbms2_data.append(document)
+
         # If the user adds a non-existen collection
         else:
             print(f"Unknown collection '{collection_name}', adding to DBMS1 by default.")
