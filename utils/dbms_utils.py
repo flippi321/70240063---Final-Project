@@ -6,13 +6,14 @@ from pymongo.errors import ConnectionFailure
 from utils.read_media import read_file_into_variable
 
 def get_clients():
-    """Connect to MongoDB for both databases (DBMS1 and DBMS2)."""
+    """Returns MongoDB clients for both DBMS1 and DBMS2."""
     try:
         dbms1_port = int(os.getenv("DBMS1_PORT", 27017))
         dbms2_port = int(os.getenv("DBMS2_PORT", 27018))
+        replica_set_name = os.getenv("MONGO_REPLICA_SET", "rs0")
 
-        client1 = MongoClient("localhost", dbms1_port)  # DBMS1 (Beijing)
-        client2 = MongoClient("localhost", dbms2_port)  # DBMS2 (Hong Kong)
+        client1 = MongoClient(f"mongodb://localhost:{dbms1_port}/?replicaSet={replica_set_name}")
+        client2 = MongoClient(f"mongodb://localhost:{dbms2_port}/?replicaSet={replica_set_name}")
         return client1, client2
     except ConnectionFailure as e:
         print(f"Error connecting to MongoDB: {e}")
@@ -106,7 +107,7 @@ def split_data_by_database(collection_name, data):
                 print(f"Could not find user {user_id}")
 
         # Partition articles by category
-        elif collection_name == "Article":
+        elif collection_name == "Article" or collection_name == "Be-Read":
             if document["category"] == "science":
                 dbms1_data.append(document)
             elif document["category"] == "technology":
