@@ -75,8 +75,6 @@ def print_results(collection_name, result):
 def get_user_by_id(user_id):
     return {"Region": "Beijing"}
 
-# --------------- CRUD Seperation Funcitons ---------------
-
 def split_data_by_database(collection_name, data):
     """
     Splits the data based on logic specific to the collection.
@@ -122,6 +120,7 @@ def split_data_by_database(collection_name, data):
     return dbms1_data, dbms2_data
 
 # --------------- CRUD Operations --------------- 
+
 def handle_insert(dbms1_db, dbms2_db, collection_name, entries, should_print=True, multiple=False):
     """Insert a documents into a collection."""
     if not collection_name or not entries:
@@ -209,6 +208,67 @@ def handle_delete(dbms1_db, dbms2_db, collection_name, filter_str):
         else:
             print("No matching documents found in either DBMS1 or DBMS2.")
 
+"""
+Non-implemented Handle Join
+
+def handle_join(dbms1_db, dbms2_db, collection1_name, collection2_name, join_condition=None, filter1=None, filter2=None):
+    ""
+    Perform a JOIN operation between two collections in one or both databases.
+    :param collection1_name: Name of the first collection.
+    :param collection2_name: Name of the second collection.
+    :param join_condition: A JSON string defining the field mapping between the two collections. Example: '{"id": "uid"}'
+    :param filter1: JSON string filter to apply on the first collection.
+    :param filter2: JSON string filter to apply on the second collection.
+    ""
+    try:
+        # Parse the join condition and filters
+        join_condition = json.loads(join_condition) if join_condition else {}
+        filter1 = json.loads(filter1) if filter1 else {}
+        filter2 = json.loads(filter2) if filter2 else {}
+
+        pipeline = [
+            {
+            '$lookup': 
+                {
+                'from' : 'models',
+                'localField' : 'references',
+                'foreignField' : 'references',
+                'as' : 'cellmodels'
+                }},
+            {
+            '$match':
+                 {
+                'authors' : 'Migliore M',
+                'cellmodels.celltypes' : 
+                'Hippocampus CA3 pyramidal cell'
+                }
+            }]
+
+        # Fetch data from both collections in both databases
+        collection1_data = list(dbms1_db[collection1_name].find(filter1)) + list(dbms2_db[collection1_name].find(filter1))
+        collection2_data = list(dbms1_db[collection2_name].find(filter2)) + list(dbms2_db[collection2_name].find(filter2))
+
+        if not join_condition:
+            print("No join condition provided. Performing a cartesian product.")
+        
+        # Perform the JOIN
+        joined_results = []
+        
+
+        # Print the joined results
+        print(f"JOIN Results between '{collection1_name}' and '{collection2_name}':")
+        for result in joined_results:
+            print(result)
+
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON: {e}")
+    except Exception as e:
+        print(f"Error performing JOIN: {e}")
+
+"""
+
+# --------------- Handle Query ---------------
+
 def handle_query(dbms1_db, dbms2_db, query):
     """Process user query and interact with databases."""
     try:
@@ -275,15 +335,20 @@ def handle_query(dbms1_db, dbms2_db, query):
 
             elif command == "insert_multiple":
                 # TODO FILTER WHICH DBMS TO INSERT INTO
-                handle_insert(dbms1_db, dbms2_db, collection_name, query_parts[2], multiple=True)
-
-            elif command == "shitfuck":
-                print("Shitfucking...")
-                for doc in dbms2_db["User"].find():
-                    print(doc)
+                handle_insert(dbms1_db, dbms2_db, query_parts[1], query_parts[2], multiple=True)
 
             else:
                 print("Unknown command. Available commands: Status, Find, Update, Delete, Insert.")
+
+            """
+            elif command == "join":
+                # Parse the join query parts
+                collection2 = query_parts[2]
+                match_field = query_parts[3] if len(query_parts) > 3 else "id"
+                conditions = json.loads(query_parts[4]) if len(query_parts) > 4 else None
+
+                handle_join(dbms1_db, dbms2_db, collection_name, collection2, match_field, conditions)
+            """
 
     except Exception as e:
         print(f"Error handling query: {e}")
