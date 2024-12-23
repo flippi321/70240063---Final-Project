@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from pymongo import MongoClient
-from utils.dbms_utils import get_clients, get_dbms_dbs
+from utils.dbms_utils import handle_insert, get_dbms_dbs
 
 def get_dbs():
     """ Get both databases. """
@@ -79,6 +79,7 @@ def populate_be_read_table():
     dbms1_db, dbms2_db = get_dbs()
     
     # Loop through both DBMSs to aggregate data
+    be_read_data = {}
     for db, db_name in [(dbms1_db, "DBMS1"), (dbms2_db, "DBMS2")]:
         # Fetch all records from the Read table
         read_records = list(db['Read'].find())
@@ -88,7 +89,6 @@ def populate_be_read_table():
             continue
         
         # Aggregate data by aid
-        be_read_data = {}
         for record in read_records:
             aid = record['aid']
             uid = record['uid']
@@ -133,7 +133,5 @@ def populate_be_read_table():
             if "timestamp" in record and int(record_timestamp) > be_read_data[aid]["timestamp"]:
                 be_read_data[aid]["timestamp"] = int(record_timestamp)
         
-        # Insert aggregated data into Be-Read table
-        be_read_records = list(be_read_data.values())
-        db['Be-Read'].insert_many(be_read_records)
-        print(f"Inserted {len(be_read_records)} records into Be-Read table in {db_name}.")
+    # Insert aggregated data into Be-Read table
+    handle_insert(dbms1_db, dbms2_db, 'Be-Read', list(be_read_data.values()), multiple=True)
