@@ -11,31 +11,44 @@
     - Both with and without arguments
 
  ---------- In Progress ---------- 
+ 
 Jakob:
-
+• Figure out JOIN situation
+• Implement updates to Be-Read
 
 Chriss:
-    
- ---------- Not Done nor Planned ---------- 
-• Figure out JOIN situation
-• Get actual replica consideration in our DMBS
-• Implement updates to Be-Read
-• Optimize Be-Read
 • Implement Monitoring of DBMS containers, showing
     - Managed data (amount and location)
     - Workload
     - etc. 
+• Get actual replica consideration in our DMBS
+
+ ---------- Not Done nor Planned ---------- 
+• Optimize Be-Read
+
 • Distribute science Articles over both databases
     - Right now it's just given to one  
     - Mabye have dynamic allocation, where we add by id or smt?
     - If not, we just randomly allocate
 
+• Caching
+
+• Clean data_generation
+• Clean db_setup
+• Clean dbms_utils
+
+• Proper error handling
 
 
+• STRESS TEST
+    - No bugs
+    - No visually slow sections
+    - 
 
  ---------- (Optional) advanced functions  ---------- 
 • GUI
     - At least use Tabulate in console
+
 • Hot/ Cold Standby DBMSs for fault tolerance
 • Expansion at the DBMS-level allowing a new DBMS server to join
 • Dropping a DBMS server at will
