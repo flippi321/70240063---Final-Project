@@ -353,7 +353,8 @@ def handle_query(dbms1_db, dbms2_db, query):
 
             elif command == "find_articles_read":
                 read_articles = join_user_article(dbms1_db, dbms2_db, eval(query_parts[1]))
-                print(f"Results for articles that user {query_parts[1]} read: {read_articles}")
+                print_results('Top Articles', read_articles)
+                #print(f"Results for articles that user {query_parts[1]} read: {read_articles}")
 
             elif command == "find_top_articles":
                 top_articles = join_beread_article(dbms1_db, dbms2_db, query_parts[1])
@@ -377,8 +378,8 @@ def handle_query(dbms1_db, dbms2_db, query):
                         article_media["video_content"] = read_file_into_variable(article["video"])
                     
                     top_articles_media.append(article_media)
-                
-                print(f"Results for top 5 articles {query_parts[1]}: {top_articles}")
+                print_results('Top Articles', top_articles)
+                #print(f"Results for top 5 articles {query_parts[1]}: {top_articles}")
 
                 return top_articles, top_articles_media
 
