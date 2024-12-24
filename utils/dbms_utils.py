@@ -115,16 +115,20 @@ def split_data_by_database(collection_name, data):
         # Parition Be-Read
         elif collection_name == "Be-Read":
             dbms1_db, dbms2_db = get_dbms_dbs()
-            filter = eval('{"aid": ' + f'"{document["aid"]}"' + '}')
+            aid = document["aid"]
+            filter = eval('{"aid": ' + f'"{aid}"' + '}')
             dbms1_result = list(dbms1_db["Article"].find(filter))
             dbms2_result = list(dbms2_db["Article"].find(filter))
             combined_result = dbms1_result + dbms2_result
             matching_document = combined_result[0]
 
-            if matching_document["category"] == "science":
-                dbms1_data.append(document)
-            elif matching_document["category"] == "technology":
-                dbms2_data.append(document)
+            if matching_document:
+                if matching_document["category"] == "science":
+                    dbms1_data.append(document)
+                elif matching_document["category"] == "technology":
+                    dbms2_data.append(document)
+            else:
+                print(f"There is no document with aid: {aid}")
 
         # If the user adds a non-existen collection
         else:

@@ -9,34 +9,33 @@
 • "Populate the empty Be-Read table by inserting newly computed records into the Be-Read table."
 • Implement JOIN functions between tables
     - Both with and without arguments
+• Seperate Be-Read into fragments
+• Implement Monitoring of DBMS containers, showing
+    - Managed data (amount and location)
+    - Workload
+    - etc. 
 
  ---------- In Progress ---------- 
  
 Jakob:
 • Figure out JOIN situation
-• Implement Monitoring of DBMS containers, showing
-    - Managed data (amount and location)
-    - Workload
-    - etc. 
-• Implement updates to Be-Read
 
 Chriss:
-• Seperate Be-Read into fragments
+• Implement updates to Be-Read after Read changes
 • Get actual replica consideration in our DMBS
 
- ---------- Not Done nor Planned ---------- 
-• Make sure queries can be without any conditions
-
-• Optimize Be-Read
-    - Should read from the read.dat, not from the database
-
+ ---------- Tomorrow ---------- 
+ 
+Jakob:
 • Distribute science Articles over both databases
     - Right now it's just given to one  
     - Mabye have dynamic allocation, where we add by id or smt?
     - If not, we just randomly allocate
 
-• Caching
+Chriss:
+• Make sure queries can be without any conditions
 
+ ---------- Not Done nor Planned ---------- 
 • Clean data_generation
 • Clean db_setup
 • Clean dbms_utils
@@ -45,11 +44,16 @@ Chriss:
 
 • Clean up setup console logs
 
+• Optimize Be-Read
+    - Should read from the read.dat, not from the database
+
+• Caching
+
+• Remove requirement that all utils commands need databases as param
+
 • STRESS TEST
     - No bugs
     - No visually slow sections
-
-• Remove requirement that all utils commands need databases as param
 
  ---------- (Optional) advanced functions  ---------- 
 • GUI
