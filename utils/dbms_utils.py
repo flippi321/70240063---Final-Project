@@ -67,10 +67,50 @@ def split_query(query):
     return combined_query
 
 def print_results(collection_name, result):
-    """Print the results of a database operation."""
-    print(f"Results from collection '{collection_name}':")
+    """
+    Print the results of a database operation in tabular format.
+    """
+    print(f"\nResults from collection '{collection_name}':")
+    
+    # If no documents found, notify and return
+    if not result:
+        print("No documents found.\n")
+        return
+
+    # 1. Gather all distinct fields across the returned documents
+    all_keys = set()
     for doc in result:
-        print(doc)
+        all_keys |= set(doc.keys())
+    # Convert to a list for indexing and consistent ordering
+    all_keys = list(all_keys)
+
+    # 2. Determine column widths (max of header or any field value)
+    col_widths = []
+    for key in all_keys:
+        # The width for this column is the max between the length of the column name 
+        # and the length of its longest value in any doc
+        max_value_len = max(len(str(doc.get(key, ""))) for doc in result)
+        col_widths.append(max(max_value_len, len(key)))
+
+    # Helper function to print a row (for headers and data)
+    def print_row(values):
+        row_str = " | ".join(
+            str(value).ljust(col_widths[i]) for i, value in enumerate(values)
+        )
+        print("| " + row_str + " |")
+
+    # 3. Print header row
+    header_line_len = sum(col_widths) + (3 * len(all_keys)) + 1  # for separators
+    print("=" * header_line_len)
+    print_row(all_keys)
+    print("=" * header_line_len)
+
+    # 4. Print each document in the result as a row
+    for doc in result:
+        row_values = [doc.get(k, "") for k in all_keys]
+        print_row(row_values)
+    print("=" * header_line_len)
+    print("")  # extra spacing
 
 def get_user_by_id(user_id):
     return {"Region": "Beijing"}
