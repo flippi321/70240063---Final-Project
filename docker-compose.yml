@@ -20,11 +20,13 @@ services:
     networks:
       - mongo-net
 
-  redis:
-    image: redis:latest
-    container_name: redis
+  GFS:
+    image: mongo:latest
+    container_name: GFS
     ports:
-      - "6379:6379"
+      - "27041:27017"
+    volumes:
+      - ./init-scripts/mongo-init2.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - mongo-net
 

@@ -5,7 +5,7 @@ from PIL import Image
 import mimetypes
 
 # MongoDB connection details
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = "mongodb://localhost:27041"
 DATABASE_NAME = "UnifiedDB"
 ARTICLES_DIR_PATH = "data/database/articles"  # Path containing article directories
 

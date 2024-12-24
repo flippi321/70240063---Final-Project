@@ -2,7 +2,7 @@ import gridfs
 from pymongo import MongoClient
 
 # MongoDB connection details
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = "mongodb://localhost:27041"
 DATABASE_NAME = "UnifiedDB"
 
 # Connect to MongoDB and GridFS
