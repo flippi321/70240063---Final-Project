@@ -14,9 +14,9 @@ def calculate_popularity_score(be_read_record):
             be_read_record.get("agreeNum", 0) * 2 +
             be_read_record.get("shareNum", 0) * 4)
 
-def populate_popular_rank(file_dir):
-    """Populate the Popular-Rank table based on Be-Read metrics using file-based data."""
-
+def populate_popular_rank(be_read_data):
+    """Populate the Popular-Rank table based on Be-Read metrics using provided data."""
+    
     # Define temporal ranges for granularity
     temporal_ranges = {
         "daily": timedelta(days=1),
@@ -24,26 +24,18 @@ def populate_popular_rank(file_dir):
         "monthly": timedelta(days=30),
         "20years": timedelta(weeks=1000)
     }
-
-    # Read Be-Read records from file
-    try:
-        with open(f"{file_dir}/article.dat", "r") as file:
-            be_read_records = [json.loads(line.strip()) for line in file if line.strip()]
-    except FileNotFoundError:
-        print(f"File {file_dir}/article.dat not found.")
-        return
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON from file: {e}")
-        return
     
+    # Use current timestamp
+    now = datetime.now()
+    dbms1_db, dbms2_db = get_dbs()
+
     for granularity, time_delta in temporal_ranges.items():
-        # Get current time and calculate the start time for the granularity
-        now = datetime.now()
+        # Calculate the start time for the granularity
         start_time = now - time_delta
         start_time = int(start_time.timestamp())
 
         # Filter Be-Read records based on timestamp
-        filtered_records = [record for record in be_read_records if int(record.get("timestamp", 0)) >= start_time]
+        filtered_records = [record for record in be_read_data if int(record.get("timestamp", 0)) >= start_time]
         
         if not filtered_records:
             print(f"No Be-Read records found for {granularity} granularity.")
@@ -61,7 +53,7 @@ def populate_popular_rank(file_dir):
         # Extract the top-5 articles
         top_articles = [aid for aid, _ in ranked_articles[:5]]
         
-        # Output or save the Popular-Rank entry
+        # Create the Popular-Rank entry
         popular_rank_entry = {
             "id": f"popular-{granularity}-{now.strftime('%Y%m%d%H%M%S')}",
             "timestamp": now.isoformat(),  # Convert to ISO 8601 string
@@ -69,16 +61,13 @@ def populate_popular_rank(file_dir):
             "articleAidList": top_articles
         }
         
-        # Assuming handle_insert or similar function would be used to insert data elsewhere, 
-        # but we will print the output for now
-        # print(f"Popular-Rank entry for {granularity} granularity:")
-        # print(json.dumps(popular_rank_entry, indent=4))
-
-        # Optionally, save to file
-        # with open(f"{file_dir}/popular_rank_{granularity}.json", "w") as outfile:
-        #     json.dump(popular_rank_entry, outfile, indent=4)
-        
+        # Insert Popular-Rank entry into the database or handle as needed
         print(f"Inserted Popular-Rank entry for {granularity} granularity.")
+        
+        if(granularity == "daily"):
+            dbms1_db["Popular-Rank"].insert_one(popular_rank_entry)
+        else:
+            dbms2_db["Popular-Rank"].insert_one(popular_rank_entry)
 
 def populate_be_read_table(file_dir):
     """Populate the Be-Read table based on the Read table."""
@@ -178,6 +167,7 @@ def populate_be_read_table(file_dir):
         dbms2_db["Be-Read"].insert_many(list(science.values()))
 
         print("Be-Read table populated successfully with partitions.")
+        return (list(technology_and_science.values()) + list(science.values()))
 
     except FileNotFoundError:
         print(f"File {file_dir}/read.dat not found.")

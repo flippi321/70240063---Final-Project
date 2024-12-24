@@ -172,12 +172,12 @@ def setup_databases(
     
     # Populate Be-Read table
     print("Populating Be-Read table...")
-    populate_be_read_table(file_dir=dat_files_output_dir)
+    be_read_data = populate_be_read_table(dat_files_output_dir)
     print("Be-Read table populated.")
     
     # Populate Popular-Rank table
     print("Populating Popular-Rank table...")
-    populate_popular_rank(file_dir=dat_files_output_dir)
+    populate_popular_rank(be_read_data)
     print("Popular-Rank table populated.")
 
     # Upload unstructured media (bulk media upload)
