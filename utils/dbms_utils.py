@@ -58,7 +58,7 @@ def split_query(query):
     # We get the arguments in json structure
     regex = "[^{]+({[^}]+})+"
     query_arguments = re.findall(regex, query)
-    print(query_arguments)
+    # print(query_arguments)
 
     combined_query = query_prefix + query_arguments
 
