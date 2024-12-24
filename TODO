@@ -14,52 +14,29 @@
     - Managed data (amount and location)
     - Workload
     - etc. 
+• Optimize Be-Read
+    - Should read from the read.dat, not from the database
+• STRESS TEST
+    - No bugs
+    - No visually slow sections
+• GUI
+    - At least use Tabulate in console
+• Clean data_generation, db_setup and dbms_utils
+    • Proper error handling
+    • Clean up setup console logs
 
  ---------- In Progress ---------- 
  
 Jakob:
 • Figure out JOIN situation
+    - Make sure JOIN-query can be without any conditions
+• Implement updates to Be-Read after Read changes
 
 Chriss:
-• Implement updates to Be-Read after Read changes
 • Get actual replica consideration in our DMBS
-
- ---------- Tomorrow ---------- 
- 
-Jakob:
+    - Try to get it to work.
+    - If it doesn't, we either A gaslight or B girlboss (Go to non-replicated version)
 • Distribute science Articles over both databases
     - Right now it's just given to one  
     - Mabye have dynamic allocation, where we add by id or smt?
     - If not, we just randomly allocate
-
-Chriss:
-• Make sure queries can be without any conditions
-
- ---------- Not Done nor Planned ---------- 
-• Clean data_generation
-• Clean db_setup
-• Clean dbms_utils
-
-• Proper error handling
-
-• Clean up setup console logs
-
-• Optimize Be-Read
-    - Should read from the read.dat, not from the database
-
-• Caching
-
-• Remove requirement that all utils commands need databases as param
-
-• STRESS TEST
-    - No bugs
-    - No visually slow sections
-
- ---------- (Optional) advanced functions  ---------- 
-• GUI
-    - At least use Tabulate in console
-
-• Hot/ Cold Standby DBMSs for fault tolerance
-• Expansion at the DBMS-level allowing a new DBMS server to join
-• Dropping a DBMS server at will
-• Data migration from one data center to others
