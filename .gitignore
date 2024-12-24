@@ -1,5 +1,6 @@
 db-generation.zip
 data
+unused
 
 # pycache files for utils
 utils/__pycache__/
