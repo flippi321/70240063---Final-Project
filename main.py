@@ -25,7 +25,7 @@ def main():
 
         # User Input Loop
         print("------------------------------------------------")
-        print("Welcome to our epic DB")
+        print("Welcome to our Distributed Databse System")
         print("Available commands: status, find, find_top_articles, find_articles_read, update, delete, insert, exit.")
         print("------------------------------------------------")
 

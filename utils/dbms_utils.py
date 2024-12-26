@@ -58,7 +58,7 @@ def split_query(query):
     # We get the arguments in json structure
     regex = "[^{]+({[^}]+})+"
     query_arguments = re.findall(regex, query)
-    print(query_arguments)
+    # print(query_arguments)
 
     combined_query = query_prefix + query_arguments
 
@@ -67,10 +67,50 @@ def split_query(query):
     return combined_query
 
 def print_results(collection_name, result):
-    """Print the results of a database operation."""
-    print(f"Results from collection '{collection_name}':")
+    """
+    Print the results of a database operation in tabular format.
+    """
+    print(f"\nResults from collection '{collection_name}':")
+    
+    # If no documents found, notify and return
+    if not result:
+        print("No documents found.\n")
+        return
+
+    # 1. Gather all distinct fields across the returned documents
+    all_keys = set()
     for doc in result:
-        print(doc)
+        all_keys |= set(doc.keys())
+    # Convert to a list for indexing and consistent ordering
+    all_keys = list(all_keys)
+
+    # 2. Determine column widths (max of header or any field value)
+    col_widths = []
+    for key in all_keys:
+        # The width for this column is the max between the length of the column name 
+        # and the length of its longest value in any doc
+        max_value_len = max(len(str(doc.get(key, ""))) for doc in result)
+        col_widths.append(max(max_value_len, len(key)))
+
+    # Helper function to print a row (for headers and data)
+    def print_row(values):
+        row_str = " | ".join(
+            str(value).ljust(col_widths[i]) for i, value in enumerate(values)
+        )
+        print("| " + row_str + " |")
+
+    # 3. Print header row
+    header_line_len = sum(col_widths) + (3 * len(all_keys)) + 1  # for separators
+    print("=" * header_line_len)
+    print_row(all_keys)
+    print("=" * header_line_len)
+
+    # 4. Print each document in the result as a row
+    for doc in result:
+        row_values = [doc.get(k, "") for k in all_keys]
+        print_row(row_values)
+    print("=" * header_line_len)
+    print("")  # extra spacing
 
 def get_user_by_id(user_id):
     return {"Region": "Beijing"}
@@ -95,7 +135,7 @@ def split_data_by_database(collection_name, data):
         
         # Partition reads based on users region
         elif collection_name == "Read":
-            user_id = data["uid"]
+            user_id = document["uid"]
             user = get_user_by_id(user_id)
             user_region = user["region"]
             if user_region == "Beijing":
@@ -111,7 +151,25 @@ def split_data_by_database(collection_name, data):
                 dbms1_data.append(document)
             elif document["category"] == "technology":
                 dbms2_data.append(document)
-                
+
+        # Parition Be-Read
+        elif collection_name == "Be-Read":
+            dbms1_db, dbms2_db = get_dbms_dbs()
+            aid = document["aid"]
+            filter = eval('{"aid": ' + f'"{aid}"' + '}')
+            dbms1_result = list(dbms1_db["Article"].find(filter))
+            dbms2_result = list(dbms2_db["Article"].find(filter))
+            combined_result = dbms1_result + dbms2_result
+            matching_document = combined_result[0]
+
+            if matching_document:
+                if matching_document["category"] == "science":
+                    dbms1_data.append(document)
+                elif matching_document["category"] == "technology":
+                    dbms2_data.append(document)
+            else:
+                print(f"There is no document with aid: {aid}")
+
         # If the user adds a non-existen collection
         else:
             print(f"Unknown collection '{collection_name}', adding to DBMS1 by default.")
@@ -295,7 +353,8 @@ def handle_query(dbms1_db, dbms2_db, query):
 
             elif command == "find_articles_read":
                 read_articles = join_user_article(dbms1_db, dbms2_db, eval(query_parts[1]))
-                print(f"Results for articles that user {query_parts[1]} read: {read_articles}")
+                print_results('Top Articles', read_articles)
+                #print(f"Results for articles that user {query_parts[1]} read: {read_articles}")
 
             elif command == "find_top_articles":
                 top_articles = join_beread_article(dbms1_db, dbms2_db, query_parts[1])
@@ -319,8 +378,8 @@ def handle_query(dbms1_db, dbms2_db, query):
                         article_media["video_content"] = read_file_into_variable(article["video"])
                     
                     top_articles_media.append(article_media)
-                
-                print(f"Results for top 5 articles {query_parts[1]}: {top_articles}")
+                print_results('Top Articles', top_articles)
+                #print(f"Results for top 5 articles {query_parts[1]}: {top_articles}")
 
                 return top_articles, top_articles_media
 

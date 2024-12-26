@@ -78,16 +78,7 @@ def insert_data_into_collection(db, collection_name, file_path):
 def upload_data_to_mongodb(input_dir):
     """Uploads data into MongoDB instances."""
     try:
-        dbms1_port = int(os.getenv("DBMS1_PORT", 27017))
-        dbms2_port = int(os.getenv("DBMS2_PORT", 27018))
-        #hadoop_port = os.getenv("HADOOP_PORT", 50070)
-
-        dbms1 = connect_to_mongodb("localhost", dbms1_port, "DBMS1")
-        dbms2 = connect_to_mongodb("localhost", dbms2_port, "DBMS2")
-        
-        if dbms1 is None or dbms2 is None:
-            return False
-
+        dbms1, dbms2 = get_dbms_dbs()
         
         # Clear existing data
         if not clear_all_data():
@@ -172,12 +163,12 @@ def setup_databases(
     
     # Populate Be-Read table
     print("Populating Be-Read table...")
-    populate_be_read_table()
+    be_read_data = populate_be_read_table(dat_files_output_dir)
     print("Be-Read table populated.")
     
     # Populate Popular-Rank table
     print("Populating Popular-Rank table...")
-    populate_popular_rank()
+    populate_popular_rank(be_read_data)
     print("Popular-Rank table populated.")
 
     # Upload unstructured media (bulk media upload)
