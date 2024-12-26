@@ -334,7 +334,48 @@ def handle_query(dbms1_db, dbms2_db, query):
         if query.lower() == "status":
             print("DBMS1 Collections:", dbms1_db.list_collection_names())
             print("DBMS2 Collections:", dbms2_db.list_collection_names())
-        
+
+        elif query.split(" ")[0].lower() == "join":
+            # Expected usage (variable number of arguments):
+            # join <collection1> <collection2> <match_key> [filter1_json] [filter2_json] [projection1_json] [projection2_json] [final_projection_json]
+
+            query_parts = query.split(" ")
+
+            if len(query_parts) < 5:
+                print("Error: 'join' requires 5 parts: join <col1> <col2> <match_key> <filter1> <filter2>")
+                return
+
+            collection1 = query_parts[1]
+            collection2 = query_parts[2]
+            match_key   = query_parts[3]
+            filter1_str = query_parts[4]
+            filter2_str = query_parts[5] if len(query_parts) > 5 else None
+
+            # If user didn't provide filter2, assume '{}'
+            if not filter2_str:
+                filter2_str = "{}"
+
+            # parse filters (user can type {} or {"someKey":"someVal"})
+            def parse_filter(json_str):
+                try:
+                    return eval(json_str)
+                except Exception as e:
+                    print(f"Error parsing filter: {json_str}: {e}")
+                    return {}
+
+            filter1 = parse_filter(filter1_str)
+            filter2 = parse_filter(filter2_str)
+
+            join_collections(
+                dbms1_db=dbms1_db,
+                dbms2_db=dbms2_db,
+                collection1=collection1,
+                collection2=collection2,
+                match_key=match_key,
+                filter1=filter1,
+                filter2=filter2
+            )
+
         else:
             # Split the query into command and arguments
             query_parts = split_query(query)  # Split into up to 3+ parts: command, collection, arguments & (optionally) data
@@ -464,29 +505,85 @@ def join_beread_article(dbms1_db, dbms2_db, temporal_granularity="daily"):
     return articles
 
 
-def join_collections(dbms1_db, dbms2_db, collection1, collection2, match_key, projection1=None, projection2=None):
+def join_collections(
+    dbms1_db, 
+    dbms2_db, 
+    collection1, 
+    collection2, 
+    match_key, 
+    filter1=None, 
+    filter2=None
+):
     """
-    Generalized join between two collections in distributed databases.
+    Joins two collections based on a match_key.
+    Pulls only filtered rows from each DB to reduce workload.
+    Prints the joined result in a table.
 
     Args:
-        dbms1_db, dbms2_db: MongoDB database objects.
-        collection1, collection2: Names of the collections to join.
-        match_key: The key to join on.
-        projection1, projection2: Fields to include in the result from each collection.
+        dbms1_db, dbms2_db: MongoDB database objects (distributed DB).
+        collection1 (str): Name of the first collection.
+        collection2 (str): Name of the second collection.
+        match_key (str): The field name to match on.
+        filter1 (dict, optional): Filter for the first collection.
+        filter2 (dict, optional): Filter for the second collection.
+
+    Returns:
+        list: A list of joined documents.
     """
-    # Fetch data from collection1
-    data1 = list(dbms1_db[collection1].find({}, projection1)) + list(dbms2_db[collection1].find({}, projection1))
-    match_values = [doc[match_key] for doc in data1]
-    
-    if not match_values:
-        print(f"No matching documents found in {collection1}.")
+    if filter1 is None:
+        filter1 = {}
+    if filter2 is None:
+        filter2 = {}
+
+    # 1. Fetch from COLLECTION1 in both DBMS
+    data1_db1 = list(dbms1_db[collection1].find(filter1))
+    data1_db2 = list(dbms2_db[collection1].find(filter1))
+    data1 = data1_db1 + data1_db2
+
+    if not data1:
+        print(f"No documents found in '{collection1}' matching {filter1}.")
         return []
-    
-    # Fetch matching data from collection2
-    data2 = list(dbms1_db[collection2].find({match_key: {"$in": match_values}}, projection2)) + \
-            list(dbms2_db[collection2].find({match_key: {"$in": match_values}}, projection2))
-    
-    # Combine the data
-    joined_data = [{**doc1, **next((doc2 for doc2 in data2 if doc2[match_key] == doc1[match_key]), {})} for doc1 in data1]
-    
+
+    # 2. Collect match_key values
+    match_values = [doc.get(match_key) for doc in data1 if match_key in doc]
+    match_values = list(set(match_values))  # avoid duplicates for the $in query
+    if not match_values:
+        print(f"No documents in '{collection1}' had the key '{match_key}'.")
+        return []
+
+    # 3. Build filter for COLLECTION2 to match on those values
+    filter2_with_match = {**filter2, match_key: {"$in": match_values}}
+
+    data2_db1 = list(dbms1_db[collection2].find(filter2_with_match))
+    data2_db2 = list(dbms2_db[collection2].find(filter2_with_match))
+    data2 = data2_db1 + data2_db2
+
+    if not data2:
+        print(f"No documents found in '{collection2}' matching {filter2_with_match}.")
+        return []
+
+    # 4. Build a dictionary for data2 keyed by match_key for faster lookups
+    data2_dict = {}
+    for doc2 in data2:
+        key_val = doc2.get(match_key)
+        if key_val not in data2_dict:
+            data2_dict[key_val] = []
+        data2_dict[key_val].append(doc2)
+
+    # 5. Join data on match_key
+    joined_data = []
+    for doc1 in data1:
+        doc1_key_value = doc1.get(match_key)
+        if doc1_key_value is None:
+            continue
+
+        # Get all docs in data2 that match this key
+        related_docs2 = data2_dict.get(doc1_key_value, [])
+        for doc2 in related_docs2:
+            merged_doc = {**doc1, **doc2}
+            joined_data.append(merged_doc)
+
+    # 6. Print results in table
+    print_results(f"Join between {collection1} and {collection2}", joined_data)
+
     return joined_data
