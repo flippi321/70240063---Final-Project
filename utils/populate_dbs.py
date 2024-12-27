@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import json
 from pymongo import MongoClient
-from utils.dbms_utils import handle_insert, get_dbms_dbs
+from utils.dbms_utils import distribute_article, handle_insert, get_dbms_dbs
 
 def get_dbs():
     """ Get both databases. """
@@ -94,7 +94,7 @@ def populate_be_read_table(file_dir):
                 return
 
             # Initialize partition dictionaries
-            technology_and_science = {}
+            technology = {}
             science = {}
 
             # Process each record and aggregate the data
@@ -105,9 +105,9 @@ def populate_be_read_table(file_dir):
                     continue  # Skip records without aid or uid
 
                 record_timestamp = int(record.get("timestamp", "0")[:10])  # Extract timestamp as integer
-                
+
                 # Initialize if not already in dictionary
-                if aid not in technology_and_science and aid not in science:
+                if aid not in technology and aid not in science:
                     category = article_categories.get(aid)
                     be_read_data = {
                         "aid": aid,
@@ -121,17 +121,16 @@ def populate_be_read_table(file_dir):
                         "shareUidList": [],
                         "timestamp": record_timestamp  # Initialize with the first timestamp
                     }
-                    
+
                     # Partition based on category
                     if category == "science":
                         science[aid] = be_read_data
-                    if category == "technology":
-                        technology_and_science[aid] = be_read_data
-                    
+                    elif category == "technology":
+                        technology[aid] = be_read_data
 
                 # Select the correct partition
-                if aid in technology_and_science:
-                    current_partition = technology_and_science
+                if aid in technology:
+                    current_partition = technology
                 else:
                     current_partition = science
 
@@ -160,14 +159,16 @@ def populate_be_read_table(file_dir):
                     current_partition[aid]["timestamp"] = int(record_timestamp)
 
         # After processing, upload partitions to the respective databases
-        print("Uploading technology/science articles to the database...")
-        dbms1_db["Be-Read"].insert_many(list(technology_and_science.values()))
-        
-        print("Uploading other categories to the database...")
-        dbms2_db["Be-Read"].insert_many(list(science.values()))
+        print("Uploading technology articles to DBMS2...")
+        dbms2_db["Be-Read"].insert_many(list(technology.values()))
+
+        print("Distributing science articles between DBMS1 and DBMS2...")
+        for article in science.values():
+            selected_db = distribute_article(dbms1_db, dbms2_db)
+            selected_db["Be-Read"].insert_one(article)
 
         print("Be-Read table populated successfully with partitions.")
-        return (list(technology_and_science.values()) + list(science.values()))
+        return list(technology.values()) + list(science.values())
 
     except FileNotFoundError:
         print(f"File {file_dir}/read.dat not found.")

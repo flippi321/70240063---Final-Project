@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import random
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from utils.read_media import read_file_into_variable
@@ -115,6 +116,16 @@ def print_results(collection_name, result):
 def get_user_by_id(user_id):
     return {"Region": "Beijing"}
 
+def distribute_article(dbms1_data, dbms2_data):
+    # From the setup we have science/technology = 45%/55%
+    # As DBMS2 already have a majority of the articles we set 80%/20% for science
+    # This totals in DBMS1/DBMS2 = 36%/64%
+    probabilities = [0.8, 0.2]  # 80% chance for DBMS1, 20% chance for DBMS2
+
+    # Make a random choice
+    selected_option = random.choices([dbms1_data, dbms2_data], probabilities)[0]
+    return selected_option
+
 def split_data_by_database(collection_name, data):
     """
     Splits the data based on logic specific to the collection.
@@ -148,7 +159,8 @@ def split_data_by_database(collection_name, data):
         # Partition articles by category
         elif collection_name == "Article":
             if document["category"] == "science":
-                dbms1_data.append(document)
+                selected_option = distribute_article(dbms1_data, dbms2_data)
+                selected_option.append(document)
             elif document["category"] == "technology":
                 dbms2_data.append(document)
 
